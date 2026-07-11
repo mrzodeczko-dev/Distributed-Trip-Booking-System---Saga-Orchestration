@@ -88,14 +88,6 @@ public class SagaInstance {
                 .findFirst();
     }
 
-
-    /*
-        Odpowiada na pytanie: który krok cofnąć teraz, gdy saga jest w fazie kompensacji.
-        Lista steps ma stałą kolejność forward: FLIGHT (indeks 0) → HOTEL (1) → PAYMENT (2).
-        Pętla idzie od końca do początku (i = 2, 1, 0).
-        Szuka pierwszego kroku ze statusem RESERVED (isReserved() = sukces forward, jeszcze nie cofniety).
-        Zwraca nazwę tego kroku w Optional, albo Optional.empty() gdy nie ma nic do cofnięcia.
-     */
     public Optional<SagaStepName> nextStepToCompensate() {
         for (int i = steps.size() - 1; i >= 0; --i) {
             if (steps.get(i).isReserved()) {
