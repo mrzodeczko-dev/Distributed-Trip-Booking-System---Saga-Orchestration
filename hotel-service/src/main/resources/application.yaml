@@ -1,0 +1,83 @@
+server:
+  port: ${SERVER_PORT}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME}
+
+  threads:
+    virtual:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 2000
+      keepalive-time: 30000
+      max-lifetime: 1800000
+
+  sql:
+    init:
+      mode: always
+
+  rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASSWORD}
+    virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST}
+
+    template:
+      retry:
+        enabled: true
+        initial-interval: 2000ms
+        multiplier: 2
+        max-retries: 5
+      mandatory: true
+      reply-timeout: 10000
+
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          multiplier: 2
+          max-retries: 5
+        prefetch: 10
+        default-requeue-rejected: false
+
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+app:
+  rabbitmq:
+    topology:
+      commands-exchange: x.saga.commands
+      replies-exchange: x.saga.replies
+      dlx-exchange: x.saga.dlx
+      command-queue: q.hotel-service.commands
+      command-dlq: q.hotel-service.commands.dlq
+      command-routing-key: hotel.command
+      command-dlq-routing-key: hotel.command.dlq
+      reply-routing-key: saga.reply
+    outbox:
+      poll-interval-ms: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
