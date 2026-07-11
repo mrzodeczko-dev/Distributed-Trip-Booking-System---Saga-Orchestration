@@ -1,0 +1,102 @@
+services:
+  # --------------------------------------------------------------------------------------------------------------------
+  # RABBITMQ - klaster 3-wezlowy
+  # --------------------------------------------------------------------------------------------------------------------
+  rabbitmq1:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+      args:
+        RABBITMQ_VERSION: ${RABBITMQ_VERSION}
+    container_name: saga-rabbitmq-1
+    hostname: rabbitmq1
+    ports:
+      - "5672:5672"     # AMQP - polaczenia aplikacji
+      - "15672:15672"   # Management UI - panel webowy
+      - "15692:15692"   # Prometheus - metryki
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_ADMIN_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ADMIN_PASS}
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_FORCE_BOOT: "false"
+    volumes:
+      - rabbitmq1-data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 240s
+    restart: unless-stopped
+    networks:
+      - saga-network
+
+  rabbitmq2:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+      args:
+        RABBITMQ_VERSION: ${RABBITMQ_VERSION}
+    container_name: saga-rabbitmq-2
+    hostname: rabbitmq2
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+    volumes:
+      - rabbitmq2-data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - saga-network
+
+  rabbitmq3:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+      args:
+        RABBITMQ_VERSION: ${RABBITMQ_VERSION}
+    container_name: saga-rabbitmq-3
+    hostname: rabbitmq3
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+    volumes:
+      - rabbitmq3-data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - saga-network
+
+
+volumes:
+  rabbitmq1-data:
+  rabbitmq2-data:
+  rabbitmq3-data:
+
+networks:
+  saga-network:
+    driver: bridge     
