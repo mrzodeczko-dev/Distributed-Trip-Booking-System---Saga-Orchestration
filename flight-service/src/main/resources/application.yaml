@@ -72,6 +72,7 @@ app:
       reply-routing-key: saga.reply
     outbox:
       poll-interval-ms: 1000
+
 management:
   endpoints:
     web:
