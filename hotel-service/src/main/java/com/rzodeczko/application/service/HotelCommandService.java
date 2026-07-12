@@ -7,6 +7,7 @@ import com.rzodeczko.application.port.in.ProcessHotelCommandUseCase;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
 import com.rzodeczko.application.port.out.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
+import com.rzodeczko.domain.model.CabinReservation;
 import com.rzodeczko.domain.model.ReservationOutcome;
 
 import java.util.logging.Logger;
@@ -60,8 +61,8 @@ public class HotelCommandService implements ProcessHotelCommandUseCase {
                 command.customerName(),
                 command.destination()
         )) {
-            case ReservationOutcome.Success success -> {
-                cabinReservationRepository.save(success.reservation());
+            case ReservationOutcome.Success(CabinReservation reservation) -> {
+                cabinReservationRepository.save(reservation);
                 yield CommandResult.success();
             }
             case ReservationOutcome.Rejected rejected -> CommandResult.failure(rejected.reason());
