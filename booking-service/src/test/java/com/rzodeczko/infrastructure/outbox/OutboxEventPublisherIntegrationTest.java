@@ -70,12 +70,11 @@ class OutboxEventPublisherIntegrationTest extends IntegrationTestBase {
                 .build();
         outboxEventRepository.save(event);
 
-        // Invoke directly
-        outboxEventPublisher.publishPendingEvents();
-
-        // Event should be processed (published or failed depending on broker behavior)
-        OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
-        assertThat(updated.getAttemptCount()).isGreaterThan(0);
+        // Wait for scheduler to pick it up (direct call may be skipped by ShedLock)
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            OutboxEvent updated = outboxEventRepository.findById(event.getId()).orElseThrow();
+            assertThat(updated.getAttemptCount()).isGreaterThan(0);
+        });
     }
 
     @Test
