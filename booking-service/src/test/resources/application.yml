@@ -1,3 +1,10 @@
 spring:
   application:
     name: booking-service-it
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  sql:
+    init:
+      mode: always
