@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(
         classes = FlightReplyConsumerContractTest.TestConfig.class,
+        properties = "spring.application.name=booking-service-contract-test",
         webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
 @AutoConfigureMessageVerifier
