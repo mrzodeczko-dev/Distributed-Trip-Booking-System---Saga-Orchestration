@@ -1,0 +1,19 @@
+description: "Payment service publishes SUCCESS reply after successful CANCEL (refund)"
+label: "payment_cancel_success"
+input:
+  triggeredBy: "payment_cancel_success()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    step: "PAYMENT"
+    action: "CANCEL"
+    status: "SUCCESS"
+    reason: null
+  headers:
+    contentType: "application/json"
+  matchers:
+    body:
+      - path: $.sagaId
+        type: by_regex
+        value: "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"

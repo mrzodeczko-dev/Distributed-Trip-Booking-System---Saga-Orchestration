@@ -1,0 +1,22 @@
+description: "Hotel service publishes FAILURE reply when reservation is rejected"
+label: "hotel_reserve_failure"
+input:
+  triggeredBy: "hotel_reserve_failure()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    step: "HOTEL"
+    action: "RESERVE"
+    status: "FAILURE"
+    reason: "No cabins available at destination"
+  headers:
+    contentType: "application/json"
+  matchers:
+    body:
+      - path: $.sagaId
+        type: by_regex
+        value: "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
+      - path: $.reason
+        type: by_regex
+        value: ".+"

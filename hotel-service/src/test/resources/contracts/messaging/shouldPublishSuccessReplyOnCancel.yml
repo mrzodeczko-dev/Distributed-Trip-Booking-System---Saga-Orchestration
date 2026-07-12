@@ -1,0 +1,19 @@
+description: "Hotel service publishes SUCCESS reply after successful CANCEL"
+label: "hotel_cancel_success"
+input:
+  triggeredBy: "hotel_cancel_success()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    step: "HOTEL"
+    action: "CANCEL"
+    status: "SUCCESS"
+    reason: null
+  headers:
+    contentType: "application/json"
+  matchers:
+    body:
+      - path: $.sagaId
+        type: by_regex
+        value: "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
