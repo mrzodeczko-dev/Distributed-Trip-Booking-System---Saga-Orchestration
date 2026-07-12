@@ -22,6 +22,12 @@ jobs:
           cache: 'maven'
           cache-dependency-path: flight-service/pom.xml
 
+      - name: Set up Maven 3.9.9
+        run: |
+          wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+          tar xf apache-maven-3.9.9-bin.tar.gz
+          echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
+
       - name: Build, test and install stubs
         working-directory: flight-service
         run: mvn -B clean install
@@ -63,6 +69,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: booking-service/pom.xml
+
+      - name: Set up Maven 3.9.9
+        run: |
+          wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+          tar xf apache-maven-3.9.9-bin.tar.gz
+          echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
 
       - name: Restore flight-service stubs
         uses: actions/cache/restore@v4
@@ -111,6 +123,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: ${{ matrix.service }}/pom.xml
+
+      - name: Set up Maven 3.9.9
+        run: |
+          wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+          tar xf apache-maven-3.9.9-bin.tar.gz
+          echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
 
       - name: Build and test
         working-directory: ${{ matrix.service }}
