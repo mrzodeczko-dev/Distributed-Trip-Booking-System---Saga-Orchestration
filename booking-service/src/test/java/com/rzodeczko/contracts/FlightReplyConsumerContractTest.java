@@ -2,7 +2,6 @@ package com.rzodeczko.contracts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,14 +51,6 @@ class FlightReplyConsumerContractTest {
     private ContractVerifierMessaging contractVerifierMessaging;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    void drainQueue() {
-        // Opróżnij kolejkę in-memory, żeby testy były niezależne od siebie
-        while (contractVerifierMessaging.receive("x.saga.replies") != null) {
-            // drain
-        }
-    }
 
     @Test
     void shouldDeserializeSuccessReplyOnReserve() throws Exception {
