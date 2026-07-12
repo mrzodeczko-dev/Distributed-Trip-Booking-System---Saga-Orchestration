@@ -15,7 +15,7 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class SagaStepEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 

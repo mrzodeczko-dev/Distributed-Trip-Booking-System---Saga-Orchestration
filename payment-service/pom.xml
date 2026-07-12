@@ -16,6 +16,7 @@
     <properties>
         <java.version>25</java.version>
         <shedlock.version>6.0.2</shedlock.version>
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
     </properties>
     <dependencies>
         <dependency>
@@ -96,7 +97,24 @@
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -147,6 +165,17 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <baseClassForTests>
+                        com.rzodeczko.contracts.MessagingContractBaseTest
+                    </baseClassForTests>
+                    <testFramework>JUNIT5</testFramework>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>

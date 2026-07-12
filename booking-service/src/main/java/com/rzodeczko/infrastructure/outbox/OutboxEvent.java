@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class OutboxEvent {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false)
