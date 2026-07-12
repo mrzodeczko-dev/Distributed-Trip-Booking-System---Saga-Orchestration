@@ -1,0 +1,104 @@
+server:
+  port: ${SERVER_PORT}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME}
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 2000
+      keepalive-time: 30000
+      max-lifetime: 1800000
+  sql:
+    init:
+      mode: always
+  rabbitmq:
+    addresses: ${SPRING_RABBITMQ_ADDRESSES}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASSWORD}
+    virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST}
+    # RabbitTemplate to główny komponent Spring AMQP do publikowania komend sagi
+    # (np. flight.command, hotel.command).
+    template:
+      retry:
+        # Przy błędzie połączenia z brokerem Spring automatycznie ponawia wysyłkę
+        # zamiast od razu rzucać wyjątek.
+        enabled: true
+        initial-interval: 2000ms
+        multiplier: 2
+        max-retries: 5
+      # Wiadomość jest wysyłana z flagą mandatory. Jeśli exchange nie może dostarczyć wiadomości do żadnej
+      # kolejki (np. brak bindingu, zły routing key), broker nie odrzuca jej po cichu, tylko zwraca ją do
+      # aplikacji przez mechanizm Return callback.
+      mandatory: true
+      reply-timeout: 10000
+    listener:
+      # Dotyczy @RabbitListener na kolejce odpowiedzi (q.booking-service.replies).
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000ms
+          multiplier: 2
+          max-retries: 5
+        # Broker wysyła do tego konsumenta maksymalnie 10 niepotwierdzonych (unacked) wiadomości naraz.
+        prefetch: 10
+        # Gdy listener odrzuci wiadomość (np. po wyczerpaniu retry lub przy AmqpRejectAndDontRequeueException),
+        # wiadomość nie wraca na początek tej samej kolejki.
+        default-requeue-rejected: false
+    # Włącza potwierdzenia publikacji (publisher confirms) w trybie correlated:
+    # -> broker potwierdza, że wiadomość dotarła do exchange (i ewentualnie do kolejki, zależnie od konfiguracji),
+    # -> każde potwierdzenie ma correlation ID powiązane z konkretną wiadomością.
+    publisher-confirm-type: correlated
+    # Włącza obsługę returned messages — wiadomości, które exchange przyjął, ale nie mógł zroutować do żadnej
+    # kolejki (w parze z mandatory: true).
+    publisher-returns: true
+
+    # Podsumowanie powyzszej konfiguracji:
+
+    # Wysylka komendy
+    # RabbitTemplate - [ retry + confirms ] -> x.saga.commands - [ mandatory + returns ] -> kolejka docelowa
+
+    # Odbior odpowiedzi
+    # q.booking-service.replies -> @RabbitListener - [ retry, prefetch ] -> Przetworzenie - błąd po retry -> DLQ / odrzucenie
+
+    # Publisher (template + confirms + returns): niezawodne wysyłanie komend i wykrywanie problemów z routingiem.
+    # Consumer (listener + retry + no requeue): odporne przetwarzanie odpowiedzi sagi bez zapętlenia złych wiadomości.
+    # To dobre ustawienia pod orchestrator sagi.
+app:
+  rabbitmq:
+    topology:
+      commands-exchange: x.saga.commands
+      replies-exchange: x.saga.replies
+      dlx-exchange: x.saga.dlx
+      reply-queue: q.booking-service.replies
+      reply-dlq: q.booking-service.replies.dlq
+      reply-routing-key: saga.reply
+      reply-dlq-routing-key: reply.dlq
+      flight-command-routing-key: flight.command
+      hotel-command-routing-key: hotel.command
+      payment-command-routing-key: payment.command
+    outbox:
+      poll-interval-ms: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always

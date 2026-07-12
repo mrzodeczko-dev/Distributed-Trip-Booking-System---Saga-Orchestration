@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="cf2cad7a-2eb3-4845-9b60-aca700e6301c" name="Changes" comment="add CI configuration for automated build and testing with JaCoCo report generation">
+      <change afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/application.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/BookingServiceApplication.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/command/StartTripBookingCommand.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/dto/SagaInstanceDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/dto/SagaStepDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/event/ReplyStatus.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/event/SagaAction.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/event/SagaReply.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/port/in/GetSagaUseCase.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/port/in/HandleSagaReplyUseCase.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/port/in/StartTripBookingUseCase.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/port/out/SagaCommandPort.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/port/out/SagaInstanceRepository.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/service/SagaOrchestratorImpl$1.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/service/SagaOrchestratorImpl.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/application/service/SagaQueryServiceImpl.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/exception/InvalidSagaStateException.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/exception/SagaNotFoundException.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/model/saga/SagaInstance.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/model/saga/SagaStatus.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/model/saga/SagaStep.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/model/saga/SagaStepName.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/domain/model/saga/SagaStepStatus.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/configuration/BeanConfiguration.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/OutboxSagaCommandPublisher$1.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/OutboxSagaCommandPublisher.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/RabbitMqConfig.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/SagaReplyListener.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/SagaTopologyConfig.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/SagaTopologyProperties.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/dto/ParticipantCommandMessage.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/messaging/dto/SagaReplyMessage.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxEvent$OutboxEventBuilder.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxEvent.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxEventPublisher.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxEventRepository.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxEventService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/outbox/OutboxSerializationException.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapter.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/entity/SagaInstanceEntity$SagaInstanceEntityBuilder.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/entity/SagaInstanceEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/entity/SagaStepEntity$SagaStepEntityBuilder.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/entity/SagaStepEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/mapper/SagaInstanceMapper.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/persistence/repository/JpaSagaInstanceRepository.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/tx/TransactionalSagaOrchestrator.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/infrastructure/tx/TransactionalSagaQueryService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/controller/BookingController.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/dto/error/ErrorResponseDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/dto/request/StartTripBookingRequestDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/dto/response/BookingResponseDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/dto/response/SagaStepResponseDto.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/com/rzodeczko/presentation/exception/GlobalExceptionHandler.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/classes/schema.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest$FullScenarios.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest$HandleCompensationReply.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest$HandleForwardReply.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest$HandleTerminalState.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest$StartBooking.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaOrchestratorImplTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaQueryServiceImplTest$GetById.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaQueryServiceImplTest$ListAll.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/application/service/SagaQueryServiceImplTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/contracts/CommandMessageContractTest$CommandContract.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/contracts/CommandMessageContractTest$ReplyContract.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/contracts/CommandMessageContractTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/contracts/FlightReplyConsumerContractTest$TestConfig.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/contracts/FlightReplyConsumerContractTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$CompensationFlow.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$ForwardFlow.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$GetStep.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$NextStepToCompensate.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$NextStepToReserve.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$Restore.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest$Start.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaInstanceTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaStepNameTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/domain/model/saga/SagaStepTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/messaging/OutboxSagaCommandPublisherTest$SendCancel.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/messaging/OutboxSagaCommandPublisherTest$SendReserve.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/messaging/OutboxSagaCommandPublisherTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/messaging/SagaReplyListenerTest$OnReply.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/messaging/SagaReplyListenerTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/outbox/OutboxEventServiceTest$Save$1.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/outbox/OutboxEventServiceTest$Save.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/outbox/OutboxEventServiceTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapterTest$FindAll.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapterTest$FindById.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapterTest$FindByIdForUpdate.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapterTest$Save.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/adapter/SagaInstanceRepositoryAdapterTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/mapper/SagaInstanceMapperTest$ToDomain.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/mapper/SagaInstanceMapperTest$ToNewEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/mapper/SagaInstanceMapperTest$UpdateEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/infrastructure/persistence/mapper/SagaInstanceMapperTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/controller/BookingControllerTest$GetBooking.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/controller/BookingControllerTest$GetBookings.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/controller/BookingControllerTest$StartBooking.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/controller/BookingControllerTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/exception/GlobalExceptionHandlerTest$BadRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/exception/GlobalExceptionHandlerTest$GenericException.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/exception/GlobalExceptionHandlerTest$SagaNotFound.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/booking-service/target/test-classes/com/rzodeczko/presentation/exception/GlobalExceptionHandlerTest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/application/dto/CabinReservationDtoTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/application/event/CommandResultTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/application/event/SagaParticipantReplyTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/infrastructure/outbox/OutboxEventEntityTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/infrastructure/tx/TransactionalCabinReservationQueryServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/infrastructure/tx/TransactionalHotelCommandServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-service/src/test/java/com/rzodeczko/presentation/dto/response/CabinReservationResponseDtoTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/application/dto/PaymentDtoTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/application/event/CommandResultTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/application/event/SagaParticipantReplyTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/infrastructure/outbox/OutboxEventEntityTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/infrastructure/tx/TransactionalPaymentCommandServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/infrastructure/tx/TransactionalPaymentQueryServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/payment-service/src/test/java/com/rzodeczko/presentation/dto/response/PaymentResponseDtoTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/ci.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/Administrator/Desktop/Saga-project/saga-orchestration" value="3GMILGByez1BhEibVQIp2NrXIbt" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="39" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "mrzodeczko-dev"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/mrzodeczko-dev/saga-orchestration.git",
+    "accountId": "dc95bbad-ed66-4b13-930b-6d9b686bc22d"
+  }
+}]]></component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3GMILGByez1BhEibVQIp2NrXIbt" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JUnit.All in booking-service.executor": "Run",
+    "JUnit.All in flight-service.executor": "Run",
+    "JUnit.All in hotel-service.executor": "Run",
+    "JUnit.All in payment-service.executor": "Run",
+    "JUnit.SagaOrchestratorImplTest$HandleForwardReply.shouldAdvanceToNextStepOnSuccess.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
+    "git-widget-placeholder": "master",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Administrator/Desktop/Saga-project/saga-orchestration",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.configurations.included.in.services": "true",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Administrator\Desktop\Saga-project\saga-orchestration" />
+      <recent name="C:\Users\Administrator\Desktop\Saga-project\saga-orchestration\flight-service" />
+      <recent name="C:\Users\Administrator\Desktop\Saga-project\saga-orchestration\booking-service" />
+      <recent name="C:\Users\Administrator\Desktop\Saga-project\saga-orchestration\flight-service\src\main\java\com\rzodeczko" />
+      <recent name="C:\Users\Administrator\Desktop\Saga-project\saga-orchestration\booking-service\src\main\java\com\rzodeczko" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="JUnit.All in payment-service">
+    <configuration name="All in booking-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="booking-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in flight-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="flight-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in hotel-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="hotel-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in payment-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="payment-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SagaOrchestratorImplTest$HandleForwardReply.shouldAdvanceToNextStepOnSuccess" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="booking-service" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.rzodeczko.application.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.rzodeczko.application.service.SagaOrchestratorImplTest" />
+      <option name="MAIN_CLASS_NAME" value="com.rzodeczko.application.service.SagaOrchestratorImplTest$HandleForwardReply" />
+      <option name="METHOD_NAME" value="shouldAdvanceToNextStepOnSuccess" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BookingServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="booking-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.rzodeczko.BookingServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FlightServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="flight-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.rzodeczko.FlightServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="HotelServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="hotel-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.rzodeczko.HotelServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PaymentServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="payment-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.rzodeczko.PaymentServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.All in payment-service" />
+        <item itemvalue="JUnit.All in hotel-service" />
+        <item itemvalue="JUnit.All in flight-service" />
+        <item itemvalue="JUnit.SagaOrchestratorImplTest$HandleForwardReply.shouldAdvanceToNextStepOnSuccess" />
+        <item itemvalue="JUnit.All in booking-service" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="cf2cad7a-2eb3-4845-9b60-aca700e6301c" name="Changes" comment="" />
+      <created>1783774957664</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1783774957664</updated>
+      <workItem from="1783774957669" duration="28733000" />
+    </task>
+    <task id="LOCAL-00001" summary="add outbox pattern implementation with event publishing and saga command handling">
+      <option name="closed" value="true" />
+      <created>1783775624081</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1783775624082</updated>
+    </task>
+    <task id="LOCAL-00002" summary="enhance saga entities with equals and hashcode implementation">
+      <option name="closed" value="true" />
+      <created>1783777968296</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1783777968296</updated>
+    </task>
+    <task id="LOCAL-00003" summary="add Docker Compose configuration for RabbitMQ cluster setup">
+      <option name="closed" value="true" />
+      <created>1783778033132</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1783778033132</updated>
+    </task>
+    <task id="LOCAL-00004" summary="refactor message records to improve readability by formatting parameters">
+      <option name="closed" value="true" />
+      <created>1783778273365</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1783778273365</updated>
+    </task>
+    <task id="LOCAL-00005" summary="add BookingController and related DTOs for trip booking functionality">
+      <option name="closed" value="true" />
+      <created>1783783200796</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1783783200796</updated>
+    </task>
+    <task id="LOCAL-00006" summary="add MySQL service configuration to Docker Compose for booking service">
+      <option name="closed" value="true" />
+      <created>1783787775218</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1783787775218</updated>
+    </task>
+    <task id="LOCAL-00007" summary="add initial implementation of flight service with command handling and seat reservation">
+      <option name="closed" value="true" />
+      <created>1783795673659</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1783795673659</updated>
+    </task>
+    <task id="LOCAL-00008" summary="add flight command handling and outbox event management with RabbitMQ integration">
+      <option name="closed" value="true" />
+      <created>1783798641939</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1783798641939</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add global exception handling and response DTOs for error management">
+      <option name="closed" value="true" />
+      <created>1783798871577</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1783798871577</updated>
+    </task>
+    <task id="LOCAL-00010" summary="add Docker configuration for flight service and MySQL setup">
+      <option name="closed" value="true" />
+      <created>1783801714081</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1783801714081</updated>
+    </task>
+    <task id="LOCAL-00011" summary="add initial implementation of hotel service with command handling and reservation management">
+      <option name="closed" value="true" />
+      <created>1783806960475</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1783806960475</updated>
+    </task>
+    <task id="LOCAL-00012" summary="refactor hotel command service to improve reservation outcome handling">
+      <option name="closed" value="true" />
+      <created>1783843391199</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1783843391199</updated>
+    </task>
+    <task id="LOCAL-00013" summary="add initial implementation of payment service with command handling and event publishing">
+      <option name="closed" value="true" />
+      <created>1783843880964</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1783843880964</updated>
+    </task>
+    <task id="LOCAL-00014" summary="add initial project configuration files and update groupId in pom.xml">
+      <option name="closed" value="true" />
+      <created>1783850472105</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1783850472105</updated>
+    </task>
+    <task id="LOCAL-00015" summary="update Dockerfile and pom.xml to use Java 25 and add JaCoCo plugin for code coverage">
+      <option name="closed" value="true" />
+      <created>1783854037696</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1783854037696</updated>
+    </task>
+    <task id="LOCAL-00016" summary="add CI configuration for automated build and testing with JaCoCo report generation">
+      <option name="closed" value="true" />
+      <created>1783854092027</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1783854092027</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="add outbox pattern implementation with event publishing and saga command handling" />
+    <MESSAGE value="enhance saga entities with equals and hashcode implementation" />
+    <MESSAGE value="add Docker Compose configuration for RabbitMQ cluster setup" />
+    <MESSAGE value="refactor message records to improve readability by formatting parameters" />
+    <MESSAGE value="add BookingController and related DTOs for trip booking functionality" />
+    <MESSAGE value="add MySQL service configuration to Docker Compose for booking service" />
+    <MESSAGE value="add initial implementation of flight service with command handling and seat reservation" />
+    <MESSAGE value="add flight command handling and outbox event management with RabbitMQ integration" />
+    <MESSAGE value="add global exception handling and response DTOs for error management" />
+    <MESSAGE value="add Docker configuration for flight service and MySQL setup" />
+    <MESSAGE value="add initial implementation of hotel service with command handling and reservation management" />
+    <MESSAGE value="refactor hotel command service to improve reservation outcome handling" />
+    <MESSAGE value="add initial implementation of payment service with command handling and event publishing" />
+    <MESSAGE value="add initial project configuration files and update groupId in pom.xml" />
+    <MESSAGE value="update Dockerfile and pom.xml to use Java 25 and add JaCoCo plugin for code coverage" />
+    <MESSAGE value="add CI configuration for automated build and testing with JaCoCo report generation" />
+    <option name="LAST_COMMIT_MESSAGE" value="add CI configuration for automated build and testing with JaCoCo report generation" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/flight-service/src/test/java/com/rzodeczko/contracts/MessagingContractBaseTest.java</url>
+          <line>74</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
