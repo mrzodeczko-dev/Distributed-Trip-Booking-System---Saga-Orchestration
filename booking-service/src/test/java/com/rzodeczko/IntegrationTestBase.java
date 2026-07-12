@@ -5,21 +5,23 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 public abstract class IntegrationTestBase {
 
-    @Container
-    static final MySQLContainer mysql = new MySQLContainer("mysql:9.6.0")
-            .withDatabaseName("booking_test")
-            .withUsername("test")
-            .withPassword("test");
+    static final MySQLContainer mysql;
+    static final RabbitMQContainer rabbit;
 
-    @Container
-    static final RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:3.13-management");
+    static {
+        mysql = new MySQLContainer("mysql:9.6.0")
+                .withDatabaseName("booking_test")
+                .withUsername("test")
+                .withPassword("test");
+        mysql.start();
+
+        rabbit = new RabbitMQContainer("rabbitmq:3.13-management");
+        rabbit.start();
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
