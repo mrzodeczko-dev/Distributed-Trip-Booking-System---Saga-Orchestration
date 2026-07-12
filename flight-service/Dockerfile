@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------------------------
 # STAGE 1: BUILD
 # -----------------------------------------------------------------------------------------------
-FROM maven:3.9-eclipse-temurin-25-alpine AS build
+FROM maven:3.9.9-eclipse-temurin-25-alpine AS build
 WORKDIR /build
 
 COPY pom.xml .

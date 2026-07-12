@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.rzodeczko</groupId>
+    <artifactId>saga-orchestration</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>Saga Orchestration</name>
+    <description>Monorepo for Trip Booking Saga: Booking, Flight, Hotel, Payment services</description>
+
+    <modules>
+        <module>flight-service</module>
+        <module>booking-service</module>
+        <module>hotel-service</module>
+        <module>payment-service</module>
+        <module>e2e-tests</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <testcontainers.version>1.21.3</testcontainers.version>
+    </properties>
+
+    <developers>
+        <developer>
+            <name>Michal Rzodeczko</name>
+            <email>mrzodeczko.dev@gmail.com</email>
+        </developer>
+    </developers>
+</project>
