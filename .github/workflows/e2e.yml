@@ -1,0 +1,52 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Maven 3.9.9
+        run: |
+          wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+          tar xf apache-maven-3.9.9-bin.tar.gz
+          echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-e2e-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-e2e-
+            ${{ runner.os }}-maven-
+
+      - name: Build service Docker images
+        run: |
+          docker build -t saga-booking-service booking-service/
+          docker build -t saga-flight-service flight-service/
+          docker build -t saga-hotel-service hotel-service/
+          docker build -t saga-payment-service payment-service/
+
+      - name: Install parent POM
+        run: mvn install -N -B --no-transfer-progress
+
+      - name: Run E2E tests
+        working-directory: e2e-tests
+        run: mvn test -Pe2e -B --no-transfer-progress

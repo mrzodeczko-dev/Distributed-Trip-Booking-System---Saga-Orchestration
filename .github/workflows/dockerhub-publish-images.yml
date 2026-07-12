@@ -1,0 +1,49 @@
+name: Publish Docker Images
+
+on:
+  workflow_run:
+    workflows: [ "E2E Tests" ]
+    types: [ completed ]
+    branches: [ master, develop ]
+
+jobs:
+  publish:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build service Docker images
+        run: |
+          docker build -t saga-booking-service booking-service/
+          docker build -t saga-flight-service flight-service/
+          docker build -t saga-hotel-service hotel-service/
+          docker build -t saga-payment-service payment-service/
+
+      - name: Push images to Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+          TAG_DATE=$(date -u +%Y-%m-%d)
+          TAG="${TAG_DATE}-v${{ github.event.workflow_run.run_number }}"
+          NAMESPACE="mrzodeczko"
+          SERVICES="saga-booking-service saga-flight-service saga-hotel-service saga-payment-service"
+
+          for SERVICE in $SERVICES; do
+            docker tag "$SERVICE" "$NAMESPACE/$SERVICE:$TAG"
+          done
+
+          for SERVICE in $SERVICES; do
+            docker push "$NAMESPACE/$SERVICE:$TAG"
+          done
+
+          for SERVICE in $SERVICES; do
+            docker tag "$SERVICE" "$NAMESPACE/$SERVICE:latest"
+            docker push "$NAMESPACE/$SERVICE:latest"
+          done
