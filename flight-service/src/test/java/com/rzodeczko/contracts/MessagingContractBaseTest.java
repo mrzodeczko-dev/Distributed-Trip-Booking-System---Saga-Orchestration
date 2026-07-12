@@ -114,7 +114,17 @@ public abstract class MessagingContractBaseTest {
 
         @Bean
         public MessageVerifierReceiver<Message<?>> messageVerifierReceiver() {
-            return (destination, timeout, timeUnit, contract) -> sent.remove(destination);
+            return new MessageVerifierReceiver<>() {
+                @Override
+                public Message<?> receive(String destination, long timeout, TimeUnit timeUnit, @Nullable YamlContract contract) {
+                    return sent.remove(destination);
+                }
+
+                @Override
+                public Message<?> receive(String destination, YamlContract contract) {
+                    return sent.remove(destination);
+                }
+            };
         }
     }
 }
