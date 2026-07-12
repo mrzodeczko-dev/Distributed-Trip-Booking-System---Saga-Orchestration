@@ -4,15 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessageDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.contract.verifier.converter.YamlContract;
+import org.springframework.cloud.contract.verifier.messaging.MessageVerifierReceiver;
+import org.springframework.cloud.contract.verifier.messaging.MessageVerifierSender;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.cloud.contract.verifier.messaging.internal.ContractVerifierMessage;
 import org.springframework.cloud.contract.verifier.messaging.internal.ContractVerifierMessaging;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
+import jakarta.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Bazowa klasa dla testow kontraktowych messaging.
@@ -79,9 +87,34 @@ public abstract class MessagingContractBaseTest {
 
     @Configuration
     static class TestConfig {
+
+        private final Map<String, Message<?>> sent = new ConcurrentHashMap<>();
+
         @Bean
         public ObjectMapper objectMapper() {
             return new ObjectMapper();
+        }
+
+        @Bean
+        public MessageVerifierSender<Message<?>> messageVerifierSender() {
+            return new MessageVerifierSender<>() {
+                @Override
+                public <T> void send(T payload, Map<String, Object> headers, String destination, @Nullable YamlContract contract) {
+                    MessageBuilder<T> builder = MessageBuilder.withPayload(payload);
+                    headers.forEach(builder::setHeader);
+                    sent.put(destination, builder.build());
+                }
+
+                @Override
+                public void send(Message<?> message, String destination, @Nullable YamlContract contract) {
+                    sent.put(destination, message);
+                }
+            };
+        }
+
+        @Bean
+        public MessageVerifierReceiver<Message<?>> messageVerifierReceiver() {
+            return (destination, timeout, timeUnit, contract) -> sent.remove(destination);
         }
     }
 }
