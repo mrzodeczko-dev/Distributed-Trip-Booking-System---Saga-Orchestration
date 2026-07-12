@@ -1,0 +1,14 @@
+description: "Flight service publishes SUCCESS reply after successful CANCEL"
+label: "flight_cancel_success"
+input:
+  triggeredBy: "flight_cancel_success()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "${regex('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}')}"
+    step: "FLIGHT"
+    action: "CANCEL"
+    status: "SUCCESS"
+    reason: null
+  headers:
+    contentType: "application/json"

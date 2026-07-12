@@ -1,0 +1,14 @@
+description: "Flight service publishes SUCCESS reply after successful RESERVE"
+label: "flight_reserve_success"
+input:
+  triggeredBy: "flight_reserve_success()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "${regex('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}')}"
+    step: "FLIGHT"
+    action: "RESERVE"
+    status: "SUCCESS"
+    reason: null
+  headers:
+    contentType: "application/json"

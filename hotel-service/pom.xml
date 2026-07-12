@@ -8,9 +8,9 @@
 		<version>4.1.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.app</groupId>
+	<groupId>com.rzodeczko</groupId>
 	<artifactId>hotel-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>hotel-service</name>
 	<description>hotel-service</description>
 	<url/>

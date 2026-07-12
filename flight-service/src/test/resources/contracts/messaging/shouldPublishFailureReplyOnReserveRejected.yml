@@ -1,0 +1,14 @@
+description: "Flight service publishes FAILURE reply when reservation is rejected"
+label: "flight_reserve_failure"
+input:
+  triggeredBy: "flight_reserve_failure()"
+outputMessage:
+  sentTo: "x.saga.replies"
+  body:
+    sagaId: "${regex('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}')}"
+    step: "FLIGHT"
+    action: "RESERVE"
+    status: "FAILURE"
+    reason: "${regex('.+')}"
+  headers:
+    contentType: "application/json"
