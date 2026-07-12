@@ -206,6 +206,44 @@ services:
     networks:
       - saga-network
 
+  payment-mysql:
+    image: mysql:9.6.0
+    restart: unless-stopped
+    volumes:
+      - payment-mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${PAYMENT_SERVICE_MYSQL_DB_NAME}
+      MYSQL_USER: ${PAYMENT_SERVICE_MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
+    command: >
+      --default-time-zone='+00:00'
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=${PAYMENT_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
+      --max-connections=${PAYMENT_SERVICE_MYSQL_MAX_CONNECTIONS}
+    ports:
+      - '${PAYMENT_SERVICE_MYSQL_DB_PORT}:3306'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e \"SELECT 1 FROM information_schema.schemata WHERE schema_name='$$MYSQL_DATABASE'\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - saga-network
+
+
   # --------------------------------------------------------------------------------------------------------------------
   # BOOKING SERVICE
   # --------------------------------------------------------------------------------------------------------------------
@@ -332,6 +370,48 @@ services:
     networks:
       - saga-network
 
+  # --------------------------------------------------------------------------------------------------------------------
+  # PAYMENT SERVICE
+  # --------------------------------------------------------------------------------------------------------------------
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    restart: on-failure:5
+    ports:
+      - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
+    depends_on:
+      payment-mysql:
+        condition: service_healthy
+      rabbitmq1:
+        condition: service_healthy
+      rabbitmq2:
+        condition: service_healthy
+      rabbitmq3:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: ${PAYMENT_SERVICE_PORT}
+      SPRING_APPLICATION_NAME: ${PAYMENT_SERVICE_APPLICATION_NAME}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${PAYMENT_SERVICE_MYSQL_DB_HOST}:3306/${PAYMENT_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${PAYMENT_SERVICE_MYSQL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
+      SPRING_RABBITMQ_ADDRESSES: ${SPRING_RABBITMQ_ADDRESSES}
+      SPRING_RABBITMQ_USERNAME: ${SPRING_RABBITMQ_USERNAME}
+      SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD}
+      SPRING_RABBITMQ_VIRTUAL_HOST: ${SPRING_RABBITMQ_VIRTUAL_HOST}
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - saga-network
+
 volumes:
   rabbitmq1-data:
   rabbitmq2-data:
@@ -339,6 +419,7 @@ volumes:
   booking-mysql:
   flight-mysql:
   hotel-mysql:
+  payment-mysql:
 
 networks:
   saga-network:
