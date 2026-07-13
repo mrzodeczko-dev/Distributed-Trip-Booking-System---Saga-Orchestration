@@ -252,5 +252,5 @@ The project uses three GitHub Actions workflows. **`ci.yml`** has two jobs: **Fl
 
 ## Contact
 
-Designed and implemented by **Michal Rzodeczko**.
+Designed and implemented by **Michał Rzodeczko**.
 GitHub: [mrzodeczko-dev](https://github.com/mrzodeczko-dev)
