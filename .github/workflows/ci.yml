@@ -27,10 +27,18 @@ jobs:
           tar xf apache-maven-3.9.9-bin.tar.gz
           echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
 
-      - name: Build and install saga-common
-        run: mvn -B -pl saga-common clean install
+      - name: Install parent POM and build saga-common
+        run: |
+          mvn -B install -N
+          mvn -B -pl saga-common clean install
 
-      - name: Cache saga-common in local Maven repo
+      - name: Cache parent POM and saga-common
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.m2/repository/com/rzodeczko/saga-orchestration
+          key: saga-parent-${{ github.sha }}
+
+      - name: Cache saga-common jar
         uses: actions/cache/save@v4
         with:
           path: ~/.m2/repository/com/rzodeczko/saga-common
@@ -65,6 +73,12 @@ jobs:
           wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
           tar xf apache-maven-3.9.9-bin.tar.gz
           echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
+
+      - name: Restore parent POM
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.m2/repository/com/rzodeczko/saga-orchestration
+          key: saga-parent-${{ github.sha }}
 
       - name: Restore saga-common
         uses: actions/cache/restore@v4
@@ -118,6 +132,12 @@ jobs:
           wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
           tar xf apache-maven-3.9.9-bin.tar.gz
           echo "$PWD/apache-maven-3.9.9/bin" >> $GITHUB_PATH
+
+      - name: Restore parent POM
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.m2/repository/com/rzodeczko/saga-orchestration
+          key: saga-parent-${{ github.sha }}
 
       - name: Restore saga-common
         uses: actions/cache/restore@v4

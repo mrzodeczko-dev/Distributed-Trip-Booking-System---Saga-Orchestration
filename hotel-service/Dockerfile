@@ -5,17 +5,11 @@ FROM maven:3.9.11-eclipse-temurin-25-alpine AS build
 WORKDIR /build
 
 COPY pom.xml .
-COPY saga-common/pom.xml saga-common/pom.xml
-COPY saga-common/src saga-common/src
-COPY hotel-service/pom.xml hotel-service/pom.xml
+COPY saga-common saga-common
+COPY hotel-service hotel-service
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -pl saga-common install -DskipTests --no-transfer-progress && \
-    mvn -B -pl hotel-service dependency:go-offline --no-transfer-progress || true
-
-COPY hotel-service/src hotel-service/src
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -pl hotel-service clean package -DskipTests --no-transfer-progress
+    mvn -B -pl saga-common,hotel-service clean package -DskipTests --no-transfer-progress
 
 RUN java -Djarmode=tools -jar hotel-service/target/hotel-service-0.0.1.jar extract --destination target/extracted
 

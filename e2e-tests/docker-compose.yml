@@ -127,7 +127,8 @@ services:
   booking-service:
     image: saga-booking-service
     build:
-      context: ../booking-service
+      context: ..
+      dockerfile: booking-service/Dockerfile
     expose:
       - "8080"
     depends_on:
@@ -160,7 +161,8 @@ services:
   flight-service:
     image: saga-flight-service
     build:
-      context: ../flight-service
+      context: ..
+      dockerfile: flight-service/Dockerfile
     expose:
       - "8080"
     depends_on:
@@ -193,7 +195,8 @@ services:
   hotel-service:
     image: saga-hotel-service
     build:
-      context: ../hotel-service
+      context: ..
+      dockerfile: hotel-service/Dockerfile
     expose:
       - "8080"
     depends_on:
@@ -226,7 +229,8 @@ services:
   payment-service:
     image: saga-payment-service
     build:
-      context: ../payment-service
+      context: ..
+      dockerfile: payment-service/Dockerfile
     expose:
       - "8080"
     depends_on:

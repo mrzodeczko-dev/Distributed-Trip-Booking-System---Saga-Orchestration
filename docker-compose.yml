@@ -249,8 +249,8 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   booking-service:
     build:
-      context: ./booking-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: booking-service/Dockerfile
     restart: on-failure:5
     ports:
       - "${BOOKING_SERVICE_PORT}:${BOOKING_SERVICE_PORT}"
@@ -291,8 +291,8 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   flight-service:
     build:
-      context: ./flight-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: flight-service/Dockerfile
     restart: on-failure:5
     ports:
       - "${FLIGHT_SERVICE_PORT}:${FLIGHT_SERVICE_PORT}"
@@ -333,8 +333,8 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   hotel-service:
     build:
-      context: ./hotel-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: hotel-service/Dockerfile
     restart: on-failure:5
     ports:
       - "${HOTEL_SERVICE_PORT}:${HOTEL_SERVICE_PORT}"
@@ -375,8 +375,8 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   payment-service:
     build:
-      context: ./payment-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: payment-service/Dockerfile
     restart: on-failure:5
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"

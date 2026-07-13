@@ -18,10 +18,10 @@ jobs:
 
       - name: Build service Docker images
         run: |
-          docker build -t saga-booking-service booking-service/
-          docker build -t saga-flight-service flight-service/
-          docker build -t saga-hotel-service hotel-service/
-          docker build -t saga-payment-service payment-service/
+          docker build -f booking-service/Dockerfile -t saga-booking-service .
+          docker build -f flight-service/Dockerfile -t saga-flight-service .
+          docker build -f hotel-service/Dockerfile -t saga-hotel-service .
+          docker build -f payment-service/Dockerfile -t saga-payment-service .
 
       - name: Push images to Docker Hub
         env:
