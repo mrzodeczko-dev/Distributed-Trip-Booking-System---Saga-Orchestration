@@ -13,12 +13,14 @@ import com.rzodeczko.domain.model.saga.SagaInstance;
 import com.rzodeczko.domain.model.saga.SagaStepName;
 import com.rzodeczko.domain.model.saga.SagaStepStatus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Optional;
-import java.util.logging.Logger;
 
 public class SagaOrchestratorImpl implements StartTripBookingUseCase, HandleSagaReplyUseCase {
 
-    private static final Logger log = Logger.getLogger(SagaOrchestratorImpl.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(SagaOrchestratorImpl.class);
 
     private final SagaInstanceRepository sagaInstanceRepository;
     private final SagaCommandPort sagaCommandPort;
@@ -38,7 +40,7 @@ public class SagaOrchestratorImpl implements StartTripBookingUseCase, HandleSaga
         SagaStepName firstStep = saga.nextStepToReserve().orElseThrow();
         sagaInstanceRepository.save(saga);
         sagaCommandPort.sendReserve(saga, firstStep);
-        log.info("Saga started. sagaId=%s, firstStep=%s".formatted(saga.getId(), firstStep));
+        log.info("[SAGA] Started sagaId={}, firstStep={}", saga.getId(), firstStep);
         return SagaInstanceDto.from(saga);
     }
 
@@ -53,7 +55,7 @@ public class SagaOrchestratorImpl implements StartTripBookingUseCase, HandleSaga
         } else if (saga.isCompensating()) {
             handleCompensationReply(saga, reply);
         } else {
-            log.info("Saga %s terminal %s - ignoring late reply".formatted(saga.getId(), saga.getStatus()));
+            log.info("[SAGA] Terminal status={} - ignoring late reply", saga.getStatus());
         }
     }
 

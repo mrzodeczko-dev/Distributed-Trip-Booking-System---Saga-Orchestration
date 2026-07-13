@@ -9,12 +9,13 @@ import com.rzodeczko.application.port.out.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.domain.model.ChargeOutcome;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PaymentCommandService implements ProcessPaymentCommandUseCase {
 
     private static final String STEP = "PAYMENT";
-    private static final Logger log = Logger.getLogger(PaymentCommandService.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(PaymentCommandService.class);
 
     private final ProcessedMessageStore processedMessageStore;
     private final PaymentRepository paymentRepository;
@@ -35,7 +36,7 @@ public class PaymentCommandService implements ProcessPaymentCommandUseCase {
         String messageKey = command.sagaId() + ":" + command.action();
 
         if (processedMessageStore.existsByMessageKey(messageKey)) {
-            log.info(() -> "[PAYMENT] Duplicate command " + messageKey + " - already processed, skipping");
+            log.info("[PAYMENT] Duplicate command {} - already processed, skipping", messageKey);
             return;
         }
 
@@ -47,8 +48,7 @@ public class PaymentCommandService implements ProcessPaymentCommandUseCase {
         processedMessageStore.markProcessed(messageKey);
         sagaReplyPort.publish(SagaParticipantReply.from(command.sagaId(), STEP, command.action(), result));
 
-        log.info(() -> "[PAYMENT] saga=" + command.sagaId() + ", action=" + command.action()
-                + ", result=" + result.statusString());
+        log.info("[PAYMENT] action={}, result={}", command.action(), result.statusString());
     }
 
     private CommandResult charge(PaymentCommand command) {

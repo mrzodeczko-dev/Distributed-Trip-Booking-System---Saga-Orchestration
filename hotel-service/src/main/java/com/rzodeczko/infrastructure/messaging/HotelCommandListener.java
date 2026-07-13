@@ -22,7 +22,7 @@ public class HotelCommandListener {
 
     @RabbitListener(queues = "${app.rabbitmq.topology.command-queue}")
     public void onCommand(HotelCommandMessage message) {
-        log.info("[HOTEL] Received command saga={}, action={}", message.sagaId(), message.action());
+        log.info("[HOTEL] Received command action={}", message.action());
         processHotelCommandUseCase.handle(new HotelCommand(
                 message.sagaId(),
                 SagaAction.valueOf(message.action()),

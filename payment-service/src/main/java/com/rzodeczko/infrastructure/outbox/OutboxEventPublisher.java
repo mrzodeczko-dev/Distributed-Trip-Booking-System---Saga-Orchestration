@@ -1,7 +1,10 @@
 package com.rzodeczko.infrastructure.outbox;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.slf4j.MDC;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
@@ -20,15 +23,18 @@ public class OutboxEventPublisher {
 
     private final JpaOutboxEventRepository outboxEventRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
     private final int maxAttempts;
 
     public OutboxEventPublisher(
             JpaOutboxEventRepository outboxEventRepository,
             RabbitTemplate rabbitTemplate,
+            ObjectMapper objectMapper,
             @Value("${app.rabbitmq.outbox.max-attempts:5}") int maxAttempts
     ) {
         this.outboxEventRepository = outboxEventRepository;
         this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = objectMapper;
         this.maxAttempts = maxAttempts;
     }
 
@@ -47,18 +53,23 @@ public class OutboxEventPublisher {
     }
 
     private void publishSingle(OutboxEventEntity event) {
-        if (event.exceededMaxAttempts(maxAttempts)) {
-            event.deadLetter();
-            outboxEventRepository.save(event);
-            log.error("[OUTBOX] Dead-lettered type={}, id={}, attempts={}, lastError={}",
-                    event.getEventType(), event.getId(), event.getAttemptCount(), event.getLastError());
-            return;
+        String sagaId = extractSagaId(event.getPayload());
+        if (sagaId != null) {
+            MDC.put("sagaId", sagaId);
         }
-
         try {
+            if (event.exceededMaxAttempts(maxAttempts)) {
+                event.deadLetter();
+                outboxEventRepository.save(event);
+                log.error("[OUTBOX] Dead-lettered type={}, id={}, attempts={}, lastError={}",
+                        event.getEventType(), event.getId(), event.getAttemptCount(), event.getLastError());
+                return;
+            }
+
             Message message = MessageBuilder
                     .withBody(event.getPayload().getBytes(StandardCharsets.UTF_8))
                     .setContentType(MessageProperties.CONTENT_TYPE_JSON)
+                    .setHeader("sagaId", sagaId)
                     .build();
             rabbitTemplate.send(event.getExchange(), event.getRoutingKey(), message);
 
@@ -71,6 +82,18 @@ public class OutboxEventPublisher {
             outboxEventRepository.save(event);
             log.error("[OUTBOX] Publish failed type={}, id={}, attempt={}, error={}",
                     event.getEventType(), event.getId(), event.getAttemptCount(), e.getMessage());
+        } finally {
+            MDC.remove("sagaId");
+        }
+    }
+
+    private String extractSagaId(String payload) {
+        try {
+            JsonNode node = objectMapper.readTree(payload);
+            JsonNode sagaIdNode = node.get("sagaId");
+            return sagaIdNode != null ? sagaIdNode.asText() : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 }

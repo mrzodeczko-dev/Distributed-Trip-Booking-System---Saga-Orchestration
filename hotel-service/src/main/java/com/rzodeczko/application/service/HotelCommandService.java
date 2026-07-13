@@ -10,12 +10,13 @@ import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.domain.model.CabinReservation;
 import com.rzodeczko.domain.model.ReservationOutcome;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HotelCommandService implements ProcessHotelCommandUseCase {
 
     private static final String STEP = "HOTEL";
-    private static final Logger log = Logger.getLogger(HotelCommandService.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(HotelCommandService.class);
 
     private final ProcessedMessageStore processedMessageStore;
     private final CabinReservationRepository cabinReservationRepository;
@@ -35,7 +36,7 @@ public class HotelCommandService implements ProcessHotelCommandUseCase {
         String messageKey = command.sagaId() + ":" + command.action();
 
         if (processedMessageStore.existsByMessageKey(messageKey)) {
-            log.info(() -> "[HOTEL] Duplicate command " + messageKey + " - already processed, skipping");
+            log.info("[HOTEL] Duplicate command {} - already processed, skipping", messageKey);
             return;
         }
 
@@ -47,8 +48,7 @@ public class HotelCommandService implements ProcessHotelCommandUseCase {
         processedMessageStore.markAsProcessed(messageKey);
         sagaReplyPort.publish(SagaParticipantReply.from(command.sagaId(), STEP, command.action(), result));
 
-        log.info(() -> "[HOTEL] saga=" + command.sagaId() + ", action=" + command.action()
-                + ", result=" + result.statusString());
+        log.info("[HOTEL] action={}, result={}", command.action(), result.statusString());
     }
 
     private CommandResult reserve(HotelCommand command) {

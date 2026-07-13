@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -40,7 +41,7 @@ class OutboxEventPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate, 5);
+        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate, new ObjectMapper(), 5);
     }
 
     @Nested

@@ -6,6 +6,8 @@ import com.rzodeczko.application.port.in.StartTripBookingUseCase;
 import com.rzodeczko.presentation.dto.request.StartTripBookingRequestDto;
 import com.rzodeczko.presentation.dto.response.BookingResponseDto;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
@@ -40,9 +43,15 @@ public class BookingController {
                 )
         ));
 
-        return ResponseEntity
-                .created(URI.create("/bookings/" + response.sagaId()))
-                .body(response);
+        try {
+            MDC.put("sagaId", response.sagaId());
+            log.info("[SAGA] Started booking customer={}, destination={}", request.customerName(), request.destination());
+            return ResponseEntity
+                    .created(URI.create("/bookings/" + response.sagaId()))
+                    .body(response);
+        } finally {
+            MDC.remove("sagaId");
+        }
     }
 
     @GetMapping("/{sagaId}")

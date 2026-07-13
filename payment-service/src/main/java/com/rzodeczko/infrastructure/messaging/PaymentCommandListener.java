@@ -24,7 +24,7 @@ public class PaymentCommandListener {
 
     @RabbitListener(queues = "${app.rabbitmq.topology.command-queue}")
     public void onCommand(PaymentCommandMessage message) {
-        log.info("[PAYMENT] Received command saga={}, action={}", message.sagaId(), message.action());
+        log.info("[PAYMENT] Received command action={}", message.action());
         processPaymentCommandUseCase.handle(new PaymentCommand(
                 message.sagaId(),
                 SagaAction.valueOf(message.action()),
