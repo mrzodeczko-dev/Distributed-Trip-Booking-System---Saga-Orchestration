@@ -18,96 +18,105 @@ Monorepo for a distributed trip booking system implementing the **Saga Orchestra
 ## Architecture
 
 ```mermaid
-graph TB
-    Client(["Client"])
+graph LR
+    Client(["🖥️ Client"])
 
-    subgraph Docker Network
-        subgraph Booking["Booking Service :8080<br/>(Saga Orchestrator)"]
-            CTRL[BookingController]
-            ORCH[SagaOrchestrator]
-            OUTBOX[Outbox Publisher]
-        end
-
-        subgraph RMQ["RabbitMQ Cluster (3 nodes)"]
-            CMD_X[x.saga.commands]
-            REPLY_X[x.saga.replies]
-            DLX[x.saga.dlx]
-        end
-
-        subgraph Flight["Flight Service :8081"]
-            F_LISTEN[FlightCommandListener]
-            F_SVC[FlightCommandService]
-            F_OUTBOX[Outbox Reply Publisher]
-        end
-
-        subgraph Hotel["Hotel Service :8082"]
-            H_LISTEN[HotelCommandListener]
-            H_SVC[HotelCommandService]
-            H_OUTBOX[Outbox Reply Publisher]
-        end
-
-        subgraph Payment["Payment Service :8083"]
-            P_LISTEN[PaymentCommandListener]
-            P_SVC[PaymentCommandService]
-            P_OUTBOX[Outbox Reply Publisher]
-        end
-
-        B_DB[(Booking MySQL)]
-        F_DB[(Flight MySQL)]
-        H_DB[(Hotel MySQL)]
-        P_DB[(Payment MySQL)]
+    subgraph ORCH["Booking Service :8080"]
+        direction TB
+        API["REST API"]
+        SAG["Saga Orchestrator"]
+        OB1[("Outbox")]
+        API --> SAG --> OB1
     end
 
-    Client -->|"POST /bookings"| Booking
+    subgraph MQ["RabbitMQ Cluster · 3 nodes"]
+        direction TB
+        CMD["x.saga.commands"]
+        RPL["x.saga.replies"]
+        DLX["x.saga.dlx"]
+    end
 
-    CTRL --> ORCH --> OUTBOX
-    OUTBOX -->|"commands"| CMD_X
-    CMD_X -->|"flight.command"| F_LISTEN
-    CMD_X -->|"hotel.command"| H_LISTEN
-    CMD_X -->|"payment.command"| P_LISTEN
+    subgraph PART["Saga Participants"]
+        direction TB
+        F["✈️ Flight :8081"]
+        H["🏨 Hotel :8082"]
+        P["💳 Payment :8083"]
+    end
 
-    F_LISTEN --> F_SVC --> F_OUTBOX -->|"saga.reply"| REPLY_X
-    H_LISTEN --> H_SVC --> H_OUTBOX -->|"saga.reply"| REPLY_X
-    P_LISTEN --> P_SVC --> P_OUTBOX -->|"saga.reply"| REPLY_X
+    B_DB[("Booking DB")]
+    F_DB[("Flight DB")]
+    H_DB[("Hotel DB")]
+    P_DB[("Payment DB")]
 
-    REPLY_X -->|"replies"| ORCH
+    Client -- "POST /bookings" --> API
 
-    ORCH --> B_DB
-    F_SVC --> F_DB
-    H_SVC --> H_DB
-    P_SVC --> P_DB
+    OB1 -. "publish" .-> CMD
+
+    CMD -- "flight.command" --> F
+    CMD -- "hotel.command" --> H
+    CMD -- "payment.command" --> P
+
+    F -. "reply" .-> RPL
+    H -. "reply" .-> RPL
+    P -. "reply" .-> RPL
+
+    RPL -- "saga.reply" --> SAG
+
+    SAG --- B_DB
+    F --- F_DB
+    H --- H_DB
+    P --- P_DB
 
     style Client fill:#e1f5fe,stroke:#0277bd,color:#000
-    style Booking fill:#fff3e0,stroke:#ef6c00,color:#000
-    style RMQ fill:#fce4ec,stroke:#c62828,color:#000
-    style Flight fill:#e8f5e9,stroke:#2e7d32,color:#000
-    style Hotel fill:#f3e5f5,stroke:#7b1fa2,color:#000
-    style Payment fill:#e0f2f1,stroke:#00695c,color:#000
-    style B_DB fill:#ffebee,stroke:#c62828,color:#000
-    style F_DB fill:#ffebee,stroke:#c62828,color:#000
-    style H_DB fill:#ffebee,stroke:#c62828,color:#000
-    style P_DB fill:#ffebee,stroke:#c62828,color:#000
+    style ORCH fill:#fff3e0,stroke:#ef6c00,color:#000
+    style MQ fill:#fce4ec,stroke:#c62828,color:#000
+    style PART fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    style B_DB fill:#fff3e0,stroke:#ef6c00,color:#000
+    style F_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    style H_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
+    style P_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
+
+    linkStyle 0,1,2,3,4,5,10 stroke:#ef6c00
+    linkStyle 6,7,8,9 stroke:#6a1b9a
 ```
 
 ### Saga Flow
 
-A trip booking saga executes three steps sequentially: **FLIGHT** -> **HOTEL** -> **PAYMENT**. Each step follows a reserve/cancel contract. If any step fails, the orchestrator automatically compensates all previously reserved steps in reverse order.
+A trip booking saga executes three steps sequentially: **FLIGHT** → **HOTEL** → **PAYMENT**. Each step follows a reserve/cancel contract. If any step fails, the orchestrator automatically compensates all previously reserved steps in reverse order.
 
 ```mermaid
-stateDiagram-v2
-    [*] --> IN_PROGRESS: POST /bookings
+flowchart TD
+    START(["POST /bookings"]) --> FL
 
-    IN_PROGRESS --> IN_PROGRESS: step RESERVED (next step)
-    IN_PROGRESS --> COMPLETED: all steps RESERVED
-    IN_PROGRESS --> COMPENSATING: step FAILED
+    subgraph HAPPY["Happy Path"]
+        direction LR
+        FL["✈️ Reserve Flight"]
+        HT["🏨 Reserve Hotel"]
+        PM["💳 Charge Payment"]
+        FL -- "reserved" --> HT -- "reserved" --> PM
+    end
 
-    COMPENSATING --> COMPENSATING: step COMPENSATED (next compensation)
-    COMPENSATING --> CANCELLED: all compensations done
-    COMPENSATING --> COMPENSATION_FAILED: compensation step failed
+    PM -- "reserved" ---> OK(["✅ COMPLETED"])
 
-    COMPLETED --> [*]
-    CANCELLED --> [*]
-    COMPENSATION_FAILED --> [*]
+    FL -- "failed" --> C_FL
+    HT -- "failed" --> C_HT
+    PM -- "failed" --> C_PM
+
+    subgraph COMP["Compensation (reverse order)"]
+        direction RL
+        C_PM["💳 Refund Payment"]
+        C_HT["🏨 Cancel Hotel"]
+        C_FL["✈️ Cancel Flight"]
+        C_PM -- "compensated" --> C_HT -- "compensated" --> C_FL
+    end
+
+    C_FL ---> CANCEL(["❌ CANCELLED"])
+
+    style HAPPY fill:#e8f5e9,stroke:#2e7d32,color:#000
+    style COMP fill:#ffebee,stroke:#c62828,color:#000
+    style OK fill:#c8e6c9,stroke:#2e7d32,color:#000
+    style CANCEL fill:#ffcdd2,stroke:#c62828,color:#000
+    style START fill:#e1f5fe,stroke:#0277bd,color:#000
 ```
 
 ### Messaging Topology
