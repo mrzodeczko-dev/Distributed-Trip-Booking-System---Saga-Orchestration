@@ -18,57 +18,46 @@ Monorepo for a distributed trip booking system implementing the **Saga Orchestra
 ## Architecture
 
 ```mermaid
-graph LR
+graph TD
     Client(["🖥️ Client"])
-
-    subgraph ORCH["Booking Service :8080"]
-        direction TB
-        API["REST API"]
-        SAG["Saga Orchestrator"]
-        OB1[("Outbox")]
-        LB1["Liquibase"]
-        API --> SAG --> OB1
-    end
-
-    subgraph MQ["RabbitMQ Cluster · 3 nodes"]
-        direction TB
-        CMD["x.saga.commands"]
-        RPL["x.saga.replies"]
-        DLX["x.saga.dlx"]
-    end
-
-    subgraph PART["Saga Participants"]
-        direction TB
-        F["✈️ Flight :8081"]
-        H["🏨 Hotel :8082"]
-        P["💳 Payment :8083"]
-        LB2["Liquibase"]
-    end
-
-    B_DB[("Booking DB")]
-    F_DB[("Flight DB")]
-    H_DB[("Hotel DB")]
-    P_DB[("Payment DB")]
-
     Client -- "POST /bookings" --> API
 
-    OB1 -. "publish" .-> CMD
+    subgraph ORCH["🟠 Booking Service :8080 — Saga Orchestrator"]
+        API["REST API"] --> SAG["Saga Orchestrator"]
+        SAG --> OB1[("Transactional Outbox")]
+    end
+
+    OB1 -. "commands" .-> CMD
+
+    subgraph MQ["🔴 RabbitMQ Cluster · 3 quorum-queue nodes"]
+        CMD["x.saga.commands"]
+        RPL["x.saga.replies"]
+    end
+
+    RPL -. "saga.reply" .-> SAG
 
     CMD -- "flight.command" --> F
     CMD -- "hotel.command" --> H
     CMD -- "payment.command" --> P
 
+    subgraph PART["🟣 Saga Participants — Hexagonal Architecture · Idempotent Consumers · Transactional Outbox"]
+        F["✈️ Flight Service :8081"]
+        H["🏨 Hotel Service :8082"]
+        P["💳 Payment Service :8083"]
+    end
+
     F -. "reply" .-> RPL
     H -. "reply" .-> RPL
     P -. "reply" .-> RPL
 
-    RPL -- "saga.reply" --> SAG
+    subgraph DATA["🗄️ Per-Service MySQL · Liquibase Migrations"]
+        B_DB[("booking_db")]
+        F_DB[("flight_db")]
+        H_DB[("hotel_db")]
+        P_DB[("payment_db")]
+    end
 
-    LB1 -. "migrations" .-> B_DB
     SAG --- B_DB
-    LB2 -. "migrations" .-> F_DB
-    LB2 -. "migrations" .-> H_DB
-    LB2 -. "migrations" .-> P_DB
     F --- F_DB
     H --- H_DB
     P --- P_DB
@@ -77,13 +66,7 @@ graph LR
     style ORCH fill:#fff3e0,stroke:#ef6c00,color:#000
     style MQ fill:#fce4ec,stroke:#c62828,color:#000
     style PART fill:#f3e5f5,stroke:#6a1b9a,color:#000
-    style B_DB fill:#fff3e0,stroke:#ef6c00,color:#000
-    style F_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
-    style H_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
-    style P_DB fill:#f3e5f5,stroke:#6a1b9a,color:#000
-
-    linkStyle 0,1,2,3,4,5,10 stroke:#ef6c00
-    linkStyle 6,7,8,9 stroke:#6a1b9a
+    style DATA fill:#efebe9,stroke:#5d4037,color:#000
 ```
 
 ### Saga Flow
