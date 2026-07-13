@@ -93,30 +93,24 @@ flowchart TD
         FL["✈️ Reserve Flight"]
         HT["🏨 Reserve Hotel"]
         PM["💳 Charge Payment"]
-        FL -- "reserved" --> HT -- "reserved" --> PM
+        FL -- "reserved ✓" --> HT -- "reserved ✓" --> PM
     end
 
-    PM -- "reserved" ---> OK(["✅ COMPLETED"])
+    PM -- "reserved ✓" ---> OK(["✅ COMPLETED"])
 
-    FL -- "failed" --> C_FL
-    HT -- "failed" --> C_HT
-    PM -- "failed" --> C_PM
+    FL -. "failed ✗" .-> CANCEL(["❌ CANCELLED"])
 
-    subgraph COMP["Compensation (reverse order)"]
-        direction RL
-        C_PM["💳 Refund Payment"]
-        C_HT["🏨 Cancel Hotel"]
-        C_FL["✈️ Cancel Flight"]
-        C_PM -- "compensated" --> C_HT -- "compensated" --> C_FL
-    end
+    HT -. "failed ✗" .-> CF1["✈️ Cancel Flight"] --> CANCEL
 
-    C_FL ---> CANCEL(["❌ CANCELLED"])
+    PM -. "failed ✗" .-> CH["🏨 Cancel Hotel"] --> CF2["✈️ Cancel Flight"] --> CANCEL
 
     style HAPPY fill:#e8f5e9,stroke:#2e7d32,color:#000
-    style COMP fill:#ffebee,stroke:#c62828,color:#000
     style OK fill:#c8e6c9,stroke:#2e7d32,color:#000
     style CANCEL fill:#ffcdd2,stroke:#c62828,color:#000
     style START fill:#e1f5fe,stroke:#0277bd,color:#000
+    style CF1 fill:#ffebee,stroke:#c62828,color:#000
+    style CF2 fill:#ffebee,stroke:#c62828,color:#000
+    style CH fill:#ffebee,stroke:#c62828,color:#000
 ```
 
 ### Messaging Topology
