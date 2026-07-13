@@ -76,7 +76,7 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
         assertThat(entity.getSteps()).hasSize(3);
 
         // Outbox event created for first step (FLIGHT_RESERVE)
-        List<OutboxEvent> events = outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc();
+        List<OutboxEvent> events = outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
         assertThat(events).anyMatch(e -> e.getEventType().equals("FLIGHT_RESERVE"));
     }
 
@@ -160,7 +160,7 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
         // Wait for scheduled OutboxEventPublisher to pick up and publish
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             List<OutboxEvent> unpublished = outboxEventRepository
-                    .findTop100ByPublishedFalseOrderByCreatedAtAsc();
+                    .findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
             // All events for this saga should be published
             boolean allPublished = outboxEventRepository.findAll().stream()
                     .filter(e -> e.getEventType().equals("FLIGHT_RESERVE"))

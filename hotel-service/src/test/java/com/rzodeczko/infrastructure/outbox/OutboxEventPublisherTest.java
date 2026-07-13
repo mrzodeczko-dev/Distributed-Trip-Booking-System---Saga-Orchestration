@@ -37,7 +37,7 @@ class OutboxEventPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate);
+        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate, 5);
     }
 
     @Nested
@@ -46,7 +46,7 @@ class OutboxEventPublisherTest {
 
         @Test
         void shouldDoNothingWhenNoUnpublishedEvents() {
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc()).thenReturn(List.of());
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc()).thenReturn(List.of());
 
             publisher.publishPendingEvents();
 
@@ -66,7 +66,7 @@ class OutboxEventPublisherTest {
                     .published(false)
                     .attemptCount(0)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
 
             publisher.publishPendingEvents();
@@ -91,7 +91,7 @@ class OutboxEventPublisherTest {
                     .published(false)
                     .attemptCount(0)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
             doThrow(new RuntimeException("broker down"))
                     .when(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
@@ -103,6 +103,55 @@ class OutboxEventPublisherTest {
             assertThat(saved.isPublished()).isFalse();
             assertThat(saved.getLastError()).isEqualTo("broker down");
             assertThat(saved.getAttemptCount()).isEqualTo(1);
+        }
+
+        @Test
+        void shouldDeadLetterEventWhenMaxAttemptsExceeded() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("evt-poison")
+                    .eventType("HOTEL_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("exchange")
+                    .routingKey("routing-key")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(5)
+                    .lastError("broker down")
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verify(rabbitTemplate, never()).send(anyString(), anyString(), any(Message.class));
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isTrue();
+            assertThat(saved.getDeadLetteredAt()).isNotNull();
+            assertThat(saved.isPublished()).isFalse();
+        }
+
+        @Test
+        void shouldNotDeadLetterEventBelowMaxAttempts() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("evt-retry")
+                    .eventType("HOTEL_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("exchange")
+                    .routingKey("routing-key")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(4)
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verify(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isFalse();
         }
     }
 }

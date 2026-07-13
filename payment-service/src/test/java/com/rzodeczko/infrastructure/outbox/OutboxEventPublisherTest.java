@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.core.Message;
@@ -29,11 +30,14 @@ class OutboxEventPublisherTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
+    @Captor
+    private ArgumentCaptor<OutboxEventEntity> entityCaptor;
+
     private OutboxEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate);
+        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate, 5);
     }
 
     @Nested
@@ -43,7 +47,7 @@ class OutboxEventPublisherTest {
         @Test
         @DisplayName("does nothing when there are no unpublished events")
         void doesNothingWhenNoUnpublishedEvents() {
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc()).thenReturn(List.of());
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc()).thenReturn(List.of());
 
             publisher.publishPendingEvents();
 
@@ -64,7 +68,7 @@ class OutboxEventPublisherTest {
                     .published(false)
                     .attemptCount(0)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
 
             publisher.publishPendingEvents();
@@ -91,7 +95,7 @@ class OutboxEventPublisherTest {
                     .published(false)
                     .attemptCount(0)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
             doThrow(new RuntimeException("broker unavailable"))
                     .when(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
@@ -102,6 +106,57 @@ class OutboxEventPublisherTest {
             assertThat(event.getLastError()).isEqualTo("broker unavailable");
             assertThat(event.getAttemptCount()).isEqualTo(1);
             verify(outboxEventRepository).save(event);
+        }
+
+        @Test
+        @DisplayName("dead-letters event when max attempts exceeded")
+        void deadLettersEventWhenMaxAttemptsExceeded() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("event-poison")
+                    .eventType("PAYMENT_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("ex")
+                    .routingKey("rk")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(5)
+                    .lastError("broker unavailable")
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verifyNoInteractions(rabbitTemplate);
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isTrue();
+            assertThat(saved.getDeadLetteredAt()).isNotNull();
+            assertThat(saved.isPublished()).isFalse();
+        }
+
+        @Test
+        @DisplayName("does not dead-letter event below max attempts")
+        void doesNotDeadLetterBelowMaxAttempts() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("event-retry")
+                    .eventType("PAYMENT_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("ex")
+                    .routingKey("rk")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(4)
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verify(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isFalse();
         }
     }
 }

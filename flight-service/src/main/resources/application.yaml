@@ -70,6 +70,7 @@ app:
       reply-routing-key: saga.reply
     outbox:
       poll-interval-ms: 1000
+      max-attempts: 5
 
 management:
   endpoints:

@@ -1,12 +1,12 @@
 package com.rzodeczko.infrastructure.outbox;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,16 +16,26 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class OutboxEventPublisher {
     private final OutboxEventRepository outboxEventRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final int maxAttempts;
+
+    public OutboxEventPublisher(
+            OutboxEventRepository outboxEventRepository,
+            RabbitTemplate rabbitTemplate,
+            @Value("${app.rabbitmq.outbox.max-attempts:5}") int maxAttempts
+    ) {
+        this.outboxEventRepository = outboxEventRepository;
+        this.rabbitTemplate = rabbitTemplate;
+        this.maxAttempts = maxAttempts;
+    }
 
     @Scheduled(fixedDelayString = "${app.rabbitmq.outbox.poll-interval-ms:1000}")
     @SchedulerLock(name = "booking_outbox_publisher", lockAtMostFor = "30s", lockAtLeastFor = "500ms")
     @Transactional
     public void publishPendingEvents() {
-        List<OutboxEvent> unpublished = outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc();
+        List<OutboxEvent> unpublished = outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
         if (unpublished.isEmpty()) {
             return;
         }
@@ -37,14 +47,25 @@ public class OutboxEventPublisher {
     }
 
     private void publishSingle(OutboxEvent event) {
+        if (event.exceededMaxAttempts(maxAttempts)) {
+            event.deadLetter();
+            outboxEventRepository.save(event);
+            log.error(
+                    "[OUTBOX] Dead-lettered type={}, id={}, attempts={}, lastError={}",
+                    event.getEventType(),
+                    event.getId(),
+                    event.getAttemptCount(),
+                    event.getLastError()
+            );
+            return;
+        }
+
         try {
             Message message = MessageBuilder
                     .withBody(event.getPayload().getBytes(StandardCharsets.UTF_8))
                     .setContentType(MessageProperties.CONTENT_TYPE_JSON)
                     .build();
 
-            // Synchroniczna wysylka. Wraz z publisher-confirms i template.retry daje
-            // mocna gwarancje, ze broker przyjal wiadomosc zanim oznaczymy published=true
             rabbitTemplate.send(event.getExchange(), event.getRoutingKey(), message);
 
             event.publishSuccess();

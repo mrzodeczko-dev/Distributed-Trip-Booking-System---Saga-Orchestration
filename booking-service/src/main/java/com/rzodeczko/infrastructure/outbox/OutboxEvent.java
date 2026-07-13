@@ -45,6 +45,12 @@ public class OutboxEvent {
     @Column(columnDefinition = "TEXT")
     private String lastError;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deadLettered = false;
+
+    private LocalDateTime deadLetteredAt;
+
     public void publishSuccess() {
         this.published = true;
         this.publishedAt = LocalDateTime.now();
@@ -55,5 +61,14 @@ public class OutboxEvent {
         this.published = false;
         this.lastError = errorMessage;
         this.attemptCount++;
+    }
+
+    public void deadLetter() {
+        this.deadLettered = true;
+        this.deadLetteredAt = LocalDateTime.now();
+    }
+
+    public boolean exceededMaxAttempts(int maxAttempts) {
+        return this.attemptCount >= maxAttempts;
     }
 }

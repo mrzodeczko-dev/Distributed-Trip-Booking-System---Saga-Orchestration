@@ -92,6 +92,7 @@ app:
       payment-command-routing-key: payment.command
     outbox:
       poll-interval-ms: 1000
+      max-attempts: 5
 
 management:
   endpoints:

@@ -40,7 +40,7 @@ class OutboxEventPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate);
+        publisher = new OutboxEventPublisher(outboxEventRepository, rabbitTemplate, 5);
     }
 
     @Nested
@@ -49,7 +49,7 @@ class OutboxEventPublisherTest {
 
         @Test
         void shouldDoNothingWhenNoUnpublishedEvents() {
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc()).thenReturn(List.of());
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc()).thenReturn(List.of());
 
             publisher.publishPendingEvents();
 
@@ -68,7 +68,7 @@ class OutboxEventPublisherTest {
                     .createdAt(LocalDateTime.now())
                     .published(false)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
 
             publisher.publishPendingEvents();
@@ -92,7 +92,7 @@ class OutboxEventPublisherTest {
                     .createdAt(LocalDateTime.now())
                     .published(false)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(event));
             doThrow(new RuntimeException("broker down"))
                     .when(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
@@ -126,7 +126,7 @@ class OutboxEventPublisherTest {
                     .createdAt(LocalDateTime.now())
                     .published(false)
                     .build();
-            when(outboxEventRepository.findTop100ByPublishedFalseOrderByCreatedAtAsc())
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
                     .thenReturn(List.of(ok, failing));
             doThrow(new RuntimeException("boom"))
                     .when(rabbitTemplate).send(org.mockito.ArgumentMatchers.eq("ex"), org.mockito.ArgumentMatchers.eq("rk"), any(Message.class));
@@ -134,6 +134,55 @@ class OutboxEventPublisherTest {
             publisher.publishPendingEvents();
 
             verify(outboxEventRepository, times(2)).save(any());
+        }
+
+        @Test
+        void shouldDeadLetterEventWhenMaxAttemptsExceeded() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("evt-poison")
+                    .eventType("FLIGHT_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("x.saga.replies")
+                    .routingKey("flight.reply")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(5)
+                    .lastError("broker down")
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verify(rabbitTemplate, never()).send(anyString(), anyString(), any(Message.class));
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isTrue();
+            assertThat(saved.getDeadLetteredAt()).isNotNull();
+            assertThat(saved.isPublished()).isFalse();
+        }
+
+        @Test
+        void shouldNotDeadLetterEventBelowMaxAttempts() {
+            OutboxEventEntity event = OutboxEventEntity.builder()
+                    .id("evt-retry")
+                    .eventType("FLIGHT_RESERVE_REPLY")
+                    .payload("{}")
+                    .exchange("x.saga.replies")
+                    .routingKey("flight.reply")
+                    .createdAt(LocalDateTime.now())
+                    .published(false)
+                    .attemptCount(4)
+                    .build();
+            when(outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc())
+                    .thenReturn(List.of(event));
+
+            publisher.publishPendingEvents();
+
+            verify(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
+            verify(outboxEventRepository).save(entityCaptor.capture());
+            OutboxEventEntity saved = entityCaptor.getValue();
+            assertThat(saved.isDeadLettered()).isFalse();
         }
     }
 }
