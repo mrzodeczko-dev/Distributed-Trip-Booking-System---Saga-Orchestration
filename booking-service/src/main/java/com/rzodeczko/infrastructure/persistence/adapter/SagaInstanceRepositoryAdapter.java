@@ -1,14 +1,17 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.port.out.SagaInstanceRepository;
 import com.rzodeczko.domain.model.saga.SagaInstance;
 import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
 import com.rzodeczko.infrastructure.persistence.mapper.SagaInstanceMapper;
 import com.rzodeczko.infrastructure.persistence.repository.JpaSagaInstanceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,11 +44,14 @@ public class SagaInstanceRepositoryAdapter implements SagaInstanceRepository {
     }
 
     @Override
-    public List<SagaInstance> findAll() {
-        return jpaSagaInstanceRepository
-                .findAll()
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
+    public PageResult<SagaInstance> findAll(PageQuery query) {
+        Page<SagaInstanceEntity> page = jpaSagaInstanceRepository
+                .findAllWithSteps(PageRequest.of(query.page(), query.size()));
+        return new PageResult<>(
+                page.getContent().stream().map(mapper::toDomain).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements()
+        );
     }
 }

@@ -1,1 +1,3 @@
 com.rzodeczko.common.messaging.SagaRabbitAutoConfiguration
+com.rzodeczko.common.outbox.OutboxAutoConfiguration
+com.rzodeczko.common.idempotency.IdempotencyAutoConfiguration

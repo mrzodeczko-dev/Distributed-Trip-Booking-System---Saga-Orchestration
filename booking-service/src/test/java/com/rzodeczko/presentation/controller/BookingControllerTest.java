@@ -1,12 +1,15 @@
 package com.rzodeczko.presentation.controller;
 
 import com.rzodeczko.application.command.StartTripBookingCommand;
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.dto.SagaStepDto;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.port.in.StartTripBookingUseCase;
 import com.rzodeczko.presentation.dto.request.StartTripBookingRequestDto;
 import com.rzodeczko.presentation.dto.response.BookingResponseDto;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -116,24 +119,28 @@ class BookingControllerTest {
     class GetBookings {
 
         @Test
-        @DisplayName("should return list of bookings")
-        void shouldReturnList() {
-            when(getSagaUseCase.listAll()).thenReturn(List.of(sampleDto()));
+        @DisplayName("should return page of bookings")
+        void shouldReturnPage() {
+            when(getSagaUseCase.list(any(PageQuery.class)))
+                    .thenReturn(new PageResult<>(List.of(sampleDto()), 0, 20, 1));
 
-            ResponseEntity<List<BookingResponseDto>> response = controller.getBookings();
+            ResponseEntity<PagedResponseDto<BookingResponseDto>> response = controller.getBookings(0, 20);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).hasSize(1);
+            assertThat(response.getBody().content()).hasSize(1);
+            assertThat(response.getBody().totalElements()).isEqualTo(1);
         }
 
         @Test
-        @DisplayName("should return empty list")
-        void shouldReturnEmptyList() {
-            when(getSagaUseCase.listAll()).thenReturn(List.of());
+        @DisplayName("should return empty page")
+        void shouldReturnEmptyPage() {
+            when(getSagaUseCase.list(any(PageQuery.class)))
+                    .thenReturn(new PageResult<>(List.of(), 0, 20, 0));
 
-            ResponseEntity<List<BookingResponseDto>> response = controller.getBookings();
+            ResponseEntity<PagedResponseDto<BookingResponseDto>> response = controller.getBookings(0, 20);
 
-            assertThat(response.getBody()).isEmpty();
+            assertThat(response.getBody().content()).isEmpty();
+            assertThat(response.getBody().totalElements()).isZero();
         }
     }
 }

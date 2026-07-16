@@ -2,8 +2,8 @@ package com.rzodeczko;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
-import com.rzodeczko.infrastructure.outbox.OutboxEvent;
-import com.rzodeczko.infrastructure.outbox.OutboxEventRepository;
+import com.rzodeczko.common.outbox.OutboxEventEntity;
+import com.rzodeczko.common.outbox.OutboxEventRepository;
 import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
 import com.rzodeczko.infrastructure.persistence.repository.JpaSagaInstanceRepository;
 import org.junit.jupiter.api.Test;
@@ -76,7 +76,7 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
         assertThat(entity.getSteps()).hasSize(3);
 
         // Outbox event created for first step (FLIGHT_RESERVE)
-        List<OutboxEvent> events = outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
+        List<OutboxEventEntity> events = outboxEventRepository.findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
         assertThat(events).anyMatch(e -> e.getEventType().equals("FLIGHT_RESERVE"));
     }
 
@@ -159,12 +159,12 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
 
         // Wait for scheduled OutboxEventPublisher to pick up and publish
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
-            List<OutboxEvent> unpublished = outboxEventRepository
+            List<OutboxEventEntity> unpublished = outboxEventRepository
                     .findTop100ByPublishedFalseAndDeadLetteredFalseOrderByCreatedAtAsc();
             // All events for this saga should be published
             boolean allPublished = outboxEventRepository.findAll().stream()
                     .filter(e -> e.getEventType().equals("FLIGHT_RESERVE"))
-                    .allMatch(OutboxEvent::isPublished);
+                    .allMatch(OutboxEventEntity::isPublished);
             assertThat(allPublished).isTrue();
         });
     }

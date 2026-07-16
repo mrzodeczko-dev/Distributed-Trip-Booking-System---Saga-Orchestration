@@ -1,10 +1,14 @@
 package com.rzodeczko.presentation.controller;
 
 import com.rzodeczko.application.command.StartTripBookingCommand;
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
+import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.port.in.StartTripBookingUseCase;
 import com.rzodeczko.presentation.dto.request.StartTripBookingRequestDto;
 import com.rzodeczko.presentation.dto.response.BookingResponseDto;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -13,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -60,11 +63,15 @@ public class BookingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BookingResponseDto>> getBookings() {
-        return ResponseEntity.ok(getSagaUseCase
-                .listAll()
-                .stream()
-                .map(BookingResponseDto::from)
-                .toList());
+    public ResponseEntity<PagedResponseDto<BookingResponseDto>> getBookings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageResult<SagaInstanceDto> result = getSagaUseCase.list(new PageQuery(page, size));
+        return ResponseEntity.ok(new PagedResponseDto<>(
+                result.content().stream().map(BookingResponseDto::from).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements()
+        ));
     }
 }

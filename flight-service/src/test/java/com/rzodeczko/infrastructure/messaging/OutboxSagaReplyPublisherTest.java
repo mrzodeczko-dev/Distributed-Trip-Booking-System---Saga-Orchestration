@@ -3,7 +3,7 @@ package com.rzodeczko.infrastructure.messaging;
 import com.rzodeczko.application.event.SagaAction;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessageDto;
-import com.rzodeczko.infrastructure.outbox.OutboxEventService;
+import com.rzodeczko.common.outbox.OutboxEventService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

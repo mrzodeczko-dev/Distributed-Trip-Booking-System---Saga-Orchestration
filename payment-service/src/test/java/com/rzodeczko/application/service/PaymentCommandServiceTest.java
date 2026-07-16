@@ -4,7 +4,7 @@ import com.rzodeczko.application.command.PaymentCommand;
 import com.rzodeczko.application.event.SagaAction;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.application.port.out.PaymentRepository;
-import com.rzodeczko.application.port.out.ProcessedMessageStore;
+import com.rzodeczko.common.idempotency.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.domain.model.Payment;
 import com.rzodeczko.domain.model.PaymentStatus;

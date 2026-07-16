@@ -3,8 +3,8 @@ package com.rzodeczko.infrastructure.messaging;
 import com.rzodeczko.domain.model.saga.SagaInstance;
 import com.rzodeczko.domain.model.saga.SagaStepName;
 import com.rzodeczko.infrastructure.messaging.dto.ParticipantCommandMessage;
-import com.rzodeczko.infrastructure.outbox.OutboxEvent;
-import com.rzodeczko.infrastructure.outbox.OutboxEventService;
+import com.rzodeczko.common.outbox.OutboxEventEntity;
+import com.rzodeczko.common.outbox.OutboxEventService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -64,7 +64,7 @@ class OutboxSagaCommandPublisherTest {
         @Test
         void shouldCreateOutboxEventWithReserveAction() {
             SagaInstance saga = SagaInstance.start(CUSTOMER, DESTINATION, AMOUNT);
-            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEvent());
+            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEventEntity());
 
             publisher.sendReserve(saga, SagaStepName.FLIGHT);
 
@@ -86,7 +86,7 @@ class OutboxSagaCommandPublisherTest {
         @Test
         void shouldResolveRoutingKeyForHotelStep() {
             SagaInstance saga = SagaInstance.start(CUSTOMER, DESTINATION, AMOUNT);
-            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEvent());
+            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEventEntity());
 
             publisher.sendReserve(saga, SagaStepName.HOTEL);
 
@@ -96,7 +96,7 @@ class OutboxSagaCommandPublisherTest {
         @Test
         void shouldResolveRoutingKeyForPaymentStep() {
             SagaInstance saga = SagaInstance.start(CUSTOMER, DESTINATION, AMOUNT);
-            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEvent());
+            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEventEntity());
 
             publisher.sendReserve(saga, SagaStepName.PAYMENT);
 
@@ -111,7 +111,7 @@ class OutboxSagaCommandPublisherTest {
         @Test
         void shouldCreateOutboxEventWithCancelAction() {
             SagaInstance saga = SagaInstance.start(CUSTOMER, DESTINATION, AMOUNT);
-            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEvent());
+            when(outboxEventService.save(any(), any(), any(), any())).thenReturn(new OutboxEventEntity());
 
             publisher.sendCancel(saga, SagaStepName.FLIGHT);
 

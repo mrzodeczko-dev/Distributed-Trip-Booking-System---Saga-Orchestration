@@ -1,12 +1,12 @@
 package com.rzodeczko.application.service;
 
-
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.port.out.SagaInstanceRepository;
 import com.rzodeczko.domain.exception.SagaNotFoundException;
 
-import java.util.List;
 import java.util.UUID;
 
 public class SagaQueryServiceImpl implements GetSagaUseCase {
@@ -26,11 +26,13 @@ public class SagaQueryServiceImpl implements GetSagaUseCase {
     }
 
     @Override
-    public List<SagaInstanceDto> listAll() {
-        return sagaInstanceRepository
-                .findAll()
-                .stream()
-                .map(SagaInstanceDto::from)
-                .toList();
+    public PageResult<SagaInstanceDto> list(PageQuery query) {
+        PageResult<com.rzodeczko.domain.model.saga.SagaInstance> page = sagaInstanceRepository.findAll(query);
+        return new PageResult<>(
+                page.content().stream().map(SagaInstanceDto::from).toList(),
+                page.page(),
+                page.size(),
+                page.totalElements()
+        );
     }
 }

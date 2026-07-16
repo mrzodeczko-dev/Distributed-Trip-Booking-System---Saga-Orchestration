@@ -64,10 +64,11 @@ class SagaInstanceRepositoryAdapterIntegrationTest extends IntegrationTestBase {
         SagaInstance saga = SagaInstance.start("FindAll Test", "Madrid", new BigDecimal("500.00"));
         repository.save(saga);
 
-        List<SagaInstance> all = repository.findAll();
+        com.rzodeczko.application.dto.PageResult<SagaInstance> all =
+                repository.findAll(new com.rzodeczko.application.dto.PageQuery(0, 100));
 
-        assertThat(all).isNotEmpty();
-        assertThat(all.stream().anyMatch(s -> s.getId().equals(saga.getId()))).isTrue();
+        assertThat(all.content()).isNotEmpty();
+        assertThat(all.content().stream().anyMatch(s -> s.getId().equals(saga.getId()))).isTrue();
     }
 
     @Test

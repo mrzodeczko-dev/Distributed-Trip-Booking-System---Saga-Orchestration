@@ -1,9 +1,9 @@
 package com.rzodeczko.application.port.out;
 
-
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.saga.SagaInstance;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +14,5 @@ public interface SagaInstanceRepository {
 
     Optional<SagaInstance> findByIdForUpdate(UUID sagaId);
 
-    List<SagaInstance> findAll();
+    PageResult<SagaInstance> findAll(PageQuery query);
 }

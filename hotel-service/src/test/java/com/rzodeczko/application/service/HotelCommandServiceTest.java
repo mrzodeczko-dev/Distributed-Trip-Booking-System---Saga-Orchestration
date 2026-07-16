@@ -4,7 +4,7 @@ import com.rzodeczko.application.command.HotelCommand;
 import com.rzodeczko.application.event.SagaAction;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
-import com.rzodeczko.application.port.out.ProcessedMessageStore;
+import com.rzodeczko.common.idempotency.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.domain.model.CabinReservation;
 import com.rzodeczko.domain.model.ReservationStatus;
@@ -68,7 +68,7 @@ class HotelCommandServiceTest {
 
             verify(sagaReplyPort, never()).publish(any());
             verify(cabinReservationRepository, never()).save(any());
-            verify(processedMessageStore, never()).markAsProcessed(any());
+            verify(processedMessageStore, never()).markProcessed(any());
         }
 
         @Test
@@ -100,7 +100,7 @@ class HotelCommandServiceTest {
             assertThat(saved.getDestination()).isEqualTo(DESTINATION);
             assertThat(saved.getStatus()).isEqualTo(ReservationStatus.RESERVED);
 
-            verify(processedMessageStore).markAsProcessed(SAGA_ID + ":RESERVE");
+            verify(processedMessageStore).markProcessed(SAGA_ID + ":RESERVE");
 
             verify(sagaReplyPort).publish(replyCaptor.capture());
             SagaParticipantReply reply = replyCaptor.getValue();
@@ -139,7 +139,7 @@ class HotelCommandServiceTest {
             assertThat(reply.status()).isEqualTo("FAILURE");
             assertThat(reply.reason()).isNotBlank();
 
-            verify(processedMessageStore).markAsProcessed(SAGA_ID + ":RESERVE");
+            verify(processedMessageStore).markProcessed(SAGA_ID + ":RESERVE");
         }
 
         @Test
@@ -150,7 +150,7 @@ class HotelCommandServiceTest {
             service.handle(reserveCommand());
 
             var order = inOrder(processedMessageStore, sagaReplyPort);
-            order.verify(processedMessageStore).markAsProcessed(any());
+            order.verify(processedMessageStore).markProcessed(any());
             order.verify(sagaReplyPort).publish(any());
         }
     }
@@ -175,7 +175,7 @@ class HotelCommandServiceTest {
             assertThat(reply.action()).isEqualTo(SagaAction.CANCEL);
             assertThat(reply.status()).isEqualTo("SUCCESS");
 
-            verify(processedMessageStore).markAsProcessed(SAGA_ID + ":CANCEL");
+            verify(processedMessageStore).markProcessed(SAGA_ID + ":CANCEL");
         }
 
         @Test

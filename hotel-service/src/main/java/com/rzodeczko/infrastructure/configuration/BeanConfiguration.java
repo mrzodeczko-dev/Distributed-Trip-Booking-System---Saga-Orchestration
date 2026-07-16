@@ -1,7 +1,7 @@
 package com.rzodeczko.infrastructure.configuration;
 
 import com.rzodeczko.application.port.out.CabinReservationRepository;
-import com.rzodeczko.application.port.out.ProcessedMessageStore;
+import com.rzodeczko.common.idempotency.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.application.service.CabinReservationQueryServiceImpl;
 import com.rzodeczko.application.service.HotelCommandService;

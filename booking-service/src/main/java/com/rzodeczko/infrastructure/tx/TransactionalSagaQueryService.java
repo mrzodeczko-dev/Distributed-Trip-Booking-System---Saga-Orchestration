@@ -1,11 +1,12 @@
 package com.rzodeczko.infrastructure.tx;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.service.SagaQueryServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 public class TransactionalSagaQueryService implements GetSagaUseCase {
@@ -24,7 +25,7 @@ public class TransactionalSagaQueryService implements GetSagaUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<SagaInstanceDto> listAll() {
-        return delegate.listAll();
+    public PageResult<SagaInstanceDto> list(PageQuery query) {
+        return delegate.list(query);
     }
 }

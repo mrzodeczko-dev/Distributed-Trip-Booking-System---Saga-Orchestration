@@ -40,7 +40,7 @@ public class SagaInstanceEntity {
     @Column(nullable = false, length = 32)
     private SagaStatus status;
 
-    @OneToMany(mappedBy = "saga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "saga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<SagaStepEntity> steps = new ArrayList<>();
 

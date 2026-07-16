@@ -4,7 +4,7 @@ import com.rzodeczko.application.port.out.SagaCommandPort;
 import com.rzodeczko.domain.model.saga.SagaInstance;
 import com.rzodeczko.domain.model.saga.SagaStepName;
 import com.rzodeczko.infrastructure.messaging.dto.ParticipantCommandMessage;
-import com.rzodeczko.infrastructure.outbox.OutboxEventService;
+import com.rzodeczko.common.outbox.OutboxEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

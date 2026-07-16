@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-outbox-indexes
+      author: rzodeczko
+      changes:
+        - createIndex:
+            tableName: outbox_events
+            indexName: idx_outbox_unpublished
+            columns:
+              - column:
+                  name: published
+              - column:
+                  name: dead_lettered
+              - column:
+                  name: created_at
+

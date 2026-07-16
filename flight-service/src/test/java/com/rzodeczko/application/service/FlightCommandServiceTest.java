@@ -4,7 +4,7 @@ import com.rzodeczko.application.command.FlightCommand;
 import com.rzodeczko.application.event.CommandResult;
 import com.rzodeczko.application.event.SagaAction;
 import com.rzodeczko.application.event.SagaParticipantReply;
-import com.rzodeczko.application.port.out.ProcessedMessageStore;
+import com.rzodeczko.common.idempotency.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.application.port.out.SeatReservationRepository;
 import com.rzodeczko.domain.model.ReservationStatus;

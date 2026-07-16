@@ -5,7 +5,7 @@ import com.rzodeczko.application.event.CommandResult;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.application.port.in.ProcessHotelCommandUseCase;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
-import com.rzodeczko.application.port.out.ProcessedMessageStore;
+import com.rzodeczko.common.idempotency.ProcessedMessageStore;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.domain.model.CabinReservation;
 import com.rzodeczko.domain.model.ReservationOutcome;
@@ -45,7 +45,7 @@ public class HotelCommandService implements ProcessHotelCommandUseCase {
             case CANCEL -> cancel(command);
         };
 
-        processedMessageStore.markAsProcessed(messageKey);
+        processedMessageStore.markProcessed(messageKey);
         sagaReplyPort.publish(SagaParticipantReply.from(command.sagaId(), STEP, command.action(), result));
 
         log.info("[HOTEL] action={}, result={}", command.action(), result.statusString());

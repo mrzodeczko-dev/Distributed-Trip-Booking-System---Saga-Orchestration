@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.saga.*;
 import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
 import com.rzodeczko.infrastructure.persistence.mapper.SagaInstanceMapper;
@@ -12,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -129,31 +134,36 @@ class SagaInstanceRepositoryAdapterTest {
     }
 
     @Nested
-    @DisplayName("findAll()")
+    @DisplayName("findAll(PageQuery)")
     class FindAll {
 
         @Test
-        @DisplayName("should map all entities to domain")
+        @DisplayName("should map all entities to domain and return page result")
         void shouldMapAll() {
             SagaInstanceEntity e1 = SagaInstanceEntity.builder().id(UUID.randomUUID()).build();
             SagaInstanceEntity e2 = SagaInstanceEntity.builder().id(UUID.randomUUID()).build();
             SagaInstance s1 = createSaga();
             SagaInstance s2 = createSaga();
-            when(jpaRepository.findAll()).thenReturn(List.of(e1, e2));
+            Page<SagaInstanceEntity> page = new PageImpl<>(List.of(e1, e2), Pageable.ofSize(20), 2);
+            when(jpaRepository.findAllWithSteps(any(Pageable.class))).thenReturn(page);
             when(mapper.toDomain(e1)).thenReturn(s1);
             when(mapper.toDomain(e2)).thenReturn(s2);
 
-            List<SagaInstance> result = adapter.findAll();
+            PageResult<SagaInstance> result = adapter.findAll(new PageQuery(0, 20));
 
-            assertThat(result).containsExactly(s1, s2);
+            assertThat(result.content()).containsExactly(s1, s2);
+            assertThat(result.totalElements()).isEqualTo(2);
         }
 
         @Test
-        @DisplayName("should return empty list when no entities")
+        @DisplayName("should return empty page when no entities")
         void shouldReturnEmptyList() {
-            when(jpaRepository.findAll()).thenReturn(List.of());
+            Page<SagaInstanceEntity> emptyPage = new PageImpl<>(List.of(), Pageable.ofSize(20), 0);
+            when(jpaRepository.findAllWithSteps(any(Pageable.class))).thenReturn(emptyPage);
 
-            assertThat(adapter.findAll()).isEmpty();
+            PageResult<SagaInstance> result = adapter.findAll(new PageQuery(0, 20));
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isZero();
         }
     }
 }

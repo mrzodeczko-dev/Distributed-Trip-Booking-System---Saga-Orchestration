@@ -3,7 +3,7 @@ package com.rzodeczko.infrastructure.messaging;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.application.port.out.SagaReplyPort;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
-import com.rzodeczko.infrastructure.outbox.OutboxEventService;
+import com.rzodeczko.common.outbox.OutboxEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

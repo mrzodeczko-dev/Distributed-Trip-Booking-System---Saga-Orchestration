@@ -1,5 +1,7 @@
 package com.rzodeczko.application.service;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.port.out.SagaInstanceRepository;
 import com.rzodeczko.domain.exception.SagaNotFoundException;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,31 +73,37 @@ class SagaQueryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("listAll()")
-    class ListAll {
+    @DisplayName("list()")
+    class ListPaged {
 
         @Test
         void shouldReturnMappedDtosWhenSagasExist() {
             SagaInstance saga1 = SagaInstance.start(CUSTOMER, DESTINATION, AMOUNT);
             SagaInstance saga2 = SagaInstance.start("Anna Nowak", "Venus", new BigDecimal("100.00"));
-            when(sagaInstanceRepository.findAll()).thenReturn(List.of(saga1, saga2));
+            PageQuery query = new PageQuery(0, 20);
+            when(sagaInstanceRepository.findAll(any(PageQuery.class)))
+                    .thenReturn(new PageResult<>(List.of(saga1, saga2), 0, 20, 2));
 
-            List<SagaInstanceDto> result = queryService.listAll();
+            PageResult<SagaInstanceDto> result = queryService.list(query);
 
-            assertThat(result).hasSize(2);
-            assertThat(result)
+            assertThat(result.content()).hasSize(2);
+            assertThat(result.content())
                     .extracting(SagaInstanceDto::sagaId)
                     .containsExactlyInAnyOrder(saga1.getId().toString(), saga2.getId().toString());
-            verify(sagaInstanceRepository).findAll();
+            assertThat(result.totalElements()).isEqualTo(2);
+            verify(sagaInstanceRepository).findAll(any(PageQuery.class));
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoSagasExist() {
-            when(sagaInstanceRepository.findAll()).thenReturn(List.of());
+        void shouldReturnEmptyPageWhenNoSagasExist() {
+            PageQuery query = new PageQuery(0, 20);
+            when(sagaInstanceRepository.findAll(any(PageQuery.class)))
+                    .thenReturn(new PageResult<>(List.of(), 0, 20, 0));
 
-            List<SagaInstanceDto> result = queryService.listAll();
+            PageResult<SagaInstanceDto> result = queryService.list(query);
 
-            assertThat(result).isEmpty();
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isZero();
         }
     }
 }

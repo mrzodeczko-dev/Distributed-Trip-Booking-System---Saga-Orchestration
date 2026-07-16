@@ -4,7 +4,7 @@ import com.rzodeczko.application.event.CommandResult;
 import com.rzodeczko.application.event.SagaAction;
 import com.rzodeczko.application.event.SagaParticipantReply;
 import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
-import com.rzodeczko.infrastructure.outbox.OutboxEventService;
+import com.rzodeczko.common.outbox.OutboxEventService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
