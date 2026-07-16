@@ -120,7 +120,10 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/bookings"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.page").exists())
+                .andExpect(jsonPath("$.size").exists())
+                .andExpect(jsonPath("$.totalElements").exists());
     }
 
     @Test

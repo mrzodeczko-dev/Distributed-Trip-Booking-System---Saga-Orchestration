@@ -11,12 +11,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class SagaInstanceRepositoryAdapter implements SagaInstanceRepository {
 
     private final JpaSagaInstanceRepository jpaSagaInstanceRepository;
@@ -24,7 +26,7 @@ public class SagaInstanceRepositoryAdapter implements SagaInstanceRepository {
 
     @Override
     public void save(SagaInstance saga) {
-        SagaInstanceEntity entity = jpaSagaInstanceRepository.findById(saga.getId())
+        SagaInstanceEntity entity = jpaSagaInstanceRepository.findByIdWithSteps(saga.getId())
                 .map(existing -> {
                     mapper.updateEntity(existing, saga);
                     return existing;
@@ -35,7 +37,7 @@ public class SagaInstanceRepositoryAdapter implements SagaInstanceRepository {
 
     @Override
     public Optional<SagaInstance> findById(UUID sagaId) {
-        return jpaSagaInstanceRepository.findById(sagaId).map(mapper::toDomain);
+        return jpaSagaInstanceRepository.findByIdWithSteps(sagaId).map(mapper::toDomain);
     }
 
     @Override
