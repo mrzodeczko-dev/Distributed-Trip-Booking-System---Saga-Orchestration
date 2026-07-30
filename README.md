@@ -24,7 +24,7 @@ Monorepo for a distributed trip booking system implementing the **Saga Orchestra
 
 ```mermaid
 graph TB
-    Client(["🖥️ Client<br/>:8085 — only exposed port"])
+    Client(["🖥️ Client<br/>:8085 - only exposed port"])
 
     Client -- "Bearer JWT" --> GW
 
@@ -58,7 +58,7 @@ graph TB
 
     GW -- "/bookings/**" --> API
 
-    subgraph ORCH["🟠 Booking Service :8080 — Saga Orchestrator"]
+    subgraph ORCH["🟠 Booking Service :8080 - Saga Orchestrator"]
         direction LR
         API["REST API"]
         SAG["Saga Orchestrator"]
@@ -80,7 +80,7 @@ graph TB
     CMD -- "hotel.command" --> H
     CMD -- "payment.command" --> P
 
-    subgraph PART["🟣 Saga Participants — Hexagonal Architecture · Idempotent Consumers · Transactional Outbox"]
+    subgraph PART["🟣 Saga Participants - Hexagonal Architecture · Idempotent Consumers · Transactional Outbox"]
         direction LR
         F["✈️ Flight Service<br/>:8081"]
         H["🏨 Hotel Service<br/>:8082"]
@@ -159,7 +159,7 @@ The system uses three RabbitMQ exchanges: `x.saga.commands` (direct) routes comm
 
 ### Reliability Guarantees
 
-All services use the **Transactional Outbox** pattern — messages are persisted to a local outbox table within the same database transaction as the business operation, then published asynchronously by a ShedLock-coordinated poller. This ensures exactly-once semantics between the database write and the message publish. Participant services additionally implement **idempotent consumers** via a `processed_messages` table — duplicate commands (same `sagaId:action` key) are silently skipped.
+All services use the **Transactional Outbox** pattern - messages are persisted to a local outbox table within the same database transaction as the business operation, then published asynchronously by a ShedLock-coordinated poller. This ensures exactly-once semantics between the database write and the message publish. Participant services additionally implement **idempotent consumers** via a `processed_messages` table - duplicate commands (same `sagaId:action` key) are silently skipped.
 
 ## Quick Start (Docker Compose)
 
@@ -273,7 +273,7 @@ saga-orchestration/
 
 ## CI/CD
 
-The project uses three GitHub Actions workflows. **`ci.yml`** has two jobs: **Flight Service**, **Hotel Service**, and **Payment Service** build in parallel — each produces Spring Cloud Contract stubs and caches them. **Booking Service** then builds and runs contract tests against all three stub sets. All jobs upload JaCoCo coverage reports and Surefire test results as artifacts. **`e2e.yml`** spins up the full Docker Compose stack and runs end-to-end saga tests. **`dockerhub-publish-images.yml`** triggers after a successful E2E run on `master`/`develop` and publishes all four service images to Docker Hub.
+The project uses three GitHub Actions workflows. **`ci.yml`** has two jobs: **Flight Service**, **Hotel Service**, and **Payment Service** build in parallel - each produces Spring Cloud Contract stubs and caches them. **Booking Service** then builds and runs contract tests against all three stub sets. All jobs upload JaCoCo coverage reports and Surefire test results as artifacts. **`e2e.yml`** spins up the full Docker Compose stack and runs end-to-end saga tests. **`dockerhub-publish-images.yml`** triggers after a successful E2E run on `master`/`develop` and publishes all four service images to Docker Hub.
 
 ## Tech Stack
 

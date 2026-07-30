@@ -10,7 +10,7 @@
 ## Overview
 [Back to Table of Contents](#toc)
 
-Booking Service is the **Saga Orchestrator** for trip bookings in the saga-orchestration platform. It coordinates a distributed transaction across three participant services — **Flight**, **Hotel**, and **Payment** — using the orchestration-based saga pattern. The orchestrator drives the forward flow (FLIGHT -> HOTEL -> PAYMENT) and, on any failure, triggers compensating actions in reverse order. Commands are published through a transactional outbox table to guarantee exactly-once delivery to RabbitMQ, and replies are consumed from a dedicated reply queue. Built with Hexagonal Architecture, the domain model is fully decoupled from messaging and persistence infrastructure.
+Booking Service is the **Saga Orchestrator** for trip bookings in the saga-orchestration platform. It coordinates a distributed transaction across three participant services - **Flight**, **Hotel**, and **Payment** - using the orchestration-based saga pattern. The orchestrator drives the forward flow (FLIGHT -> HOTEL -> PAYMENT) and, on any failure, triggers compensating actions in reverse order. Commands are published through a transactional outbox table to guarantee exactly-once delivery to RabbitMQ, and replies are consumed from a dedicated reply queue. Built with Hexagonal Architecture, the domain model is fully decoupled from messaging and persistence infrastructure.
 
 <a id="toc"></a>
 ## Table of Contents
@@ -37,7 +37,7 @@ Booking Service is the **Saga Orchestrator** for trip bookings in the saga-orche
 1. Client calls `POST /bookings` with `customerName`, `destination`, and `amount`
 2. `BookingController` delegates to `StartTripBookingUseCase` (via the `TransactionalSagaOrchestrator` decorator)
 3. `SagaInstance.start()` creates a new saga with three steps in PENDING status: **FLIGHT**, **HOTEL**, **PAYMENT**
-4. The saga is persisted to MySQL and the first command (`FLIGHT RESERVE`) is written to the **outbox table** within the same database transaction — guaranteeing atomicity between state change and command publication
+4. The saga is persisted to MySQL and the first command (`FLIGHT RESERVE`) is written to the **outbox table** within the same database transaction - guaranteeing atomicity between state change and command publication
 5. `OutboxEventPublisher` (ShedLock-coordinated poller, 1 s interval) picks up unpublished outbox events and sends them to RabbitMQ via `x.saga.commands` exchange with routing key `flight.command`
 6. When the Flight Service replies with `SUCCESS` on `q.booking-service.replies`, `SagaReplyListener` delegates to `HandleSagaReplyUseCase`
 7. The orchestrator marks the FLIGHT step as RESERVED and enqueues the next command (`HOTEL RESERVE`) via the outbox
@@ -50,7 +50,7 @@ Booking Service is the **Saga Orchestrator** for trip bookings in the saga-orche
 11. The orchestrator finds the last RESERVED step (in reverse order) and sends a `CANCEL` command
 12. On `SUCCESS` reply to a CANCEL, the step is marked COMPENSATED, and the next step to compensate (going backwards) receives a CANCEL command
 13. When all reserved steps are compensated, the saga is marked **CANCELLED**
-14. If a compensation step itself fails, the saga transitions to **COMPENSATION_FAILED** — manual intervention required
+14. If a compensation step itself fails, the saga transitions to **COMPENSATION_FAILED** - manual intervention required
 
 ### Idempotency & Late Replies
 
@@ -60,7 +60,7 @@ Booking Service is the **Saga Orchestrator** for trip bookings in the saga-orche
 
 ### Transactional Outbox Pattern
 
-Commands are never published directly to RabbitMQ from the saga orchestrator. Instead, `OutboxSagaCommandPublisher` calls `OutboxEventService` (which uses `Propagation.MANDATORY` — it must run within an existing transaction) to insert a row into the `outbox_events` table. The `OutboxEventPublisher` poller, protected by ShedLock to prevent duplicate processing in clustered deployments, reads unpublished events, sends them to RabbitMQ (with publisher confirms), and marks them as published. This guarantees that a saga state change and its corresponding command are committed atomically.
+Commands are never published directly to RabbitMQ from the saga orchestrator. Instead, `OutboxSagaCommandPublisher` calls `OutboxEventService` (which uses `Propagation.MANDATORY` - it must run within an existing transaction) to insert a row into the `outbox_events` table. The `OutboxEventPublisher` poller, protected by ShedLock to prevent duplicate processing in clustered deployments, reads unpublished events, sends them to RabbitMQ (with publisher confirms), and marks them as published. This guarantees that a saga state change and its corresponding command are committed atomically.
 
 ```mermaid
 sequenceDiagram

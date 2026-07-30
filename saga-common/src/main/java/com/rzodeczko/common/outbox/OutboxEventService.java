@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 /**
- * Zapisuje event do Outboxa. Propagation.MANDATORY wymusza istniejącą transakcję —
+ * Zapisuje event do Outboxa. Propagation.MANDATORY wymusza istniejącą transakcję -
  * event powstaje atomowo razem ze zmianą stanu domeny.
  */
 @Slf4j

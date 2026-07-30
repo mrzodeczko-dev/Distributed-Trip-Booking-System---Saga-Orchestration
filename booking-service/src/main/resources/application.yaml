@@ -62,7 +62,7 @@ spring:
     # -> broker potwierdza, że wiadomość dotarła do exchange (i ewentualnie do kolejki, zależnie od konfiguracji),
     # -> każde potwierdzenie ma correlation ID powiązane z konkretną wiadomością.
     publisher-confirm-type: correlated
-    # Włącza obsługę returned messages — wiadomości, które exchange przyjął, ale nie mógł zroutować do żadnej
+    # Włącza obsługę returned messages - wiadomości, które exchange przyjął, ale nie mógł zroutować do żadnej
     # kolejki (w parze z mandatory: true).
     publisher-returns: true
 

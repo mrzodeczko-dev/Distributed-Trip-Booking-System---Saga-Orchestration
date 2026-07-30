@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * Kontrakty Groovy definiuja ksztalt wiadomosci (outputMessage),
  * a ta klasa dostarcza mechanizm ich wyslania i weryfikacji.
  * <p>
- * Metody trigger_*() sa wywolywane przez wygenerowane testy kontraktowe —
+ * Metody trigger_*() sa wywolywane przez wygenerowane testy kontraktowe -
  * nazwa metody odpowiada labelowi z kontraktu Groovy.
  */
 @SpringBootTest(

@@ -80,7 +80,7 @@ class  SagaReplyListenerIntegrationTest extends IntegrationTestBase {
         repository.save(saga);
         UUID sagaId = saga.getId();
 
-        // Send a late reply — should be ignored
+        // Send a late reply - should be ignored
         SagaReplyMessage reply = new SagaReplyMessage(
                 sagaId, "FLIGHT", "RESERVE", "SUCCESS", null);
         rabbitTemplate.convertAndSend("x.saga.replies", "saga.reply", reply);

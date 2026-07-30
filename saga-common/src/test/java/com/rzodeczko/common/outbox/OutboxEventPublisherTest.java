@@ -141,7 +141,7 @@ class OutboxEventPublisherTest {
 
         publisher.publishPendingEvents();
 
-        // Publisher recovers from malformed sagaId — still tries to publish
+        // Publisher recovers from malformed sagaId - still tries to publish
         verify(rabbitTemplate).send(anyString(), anyString(), any(Message.class));
         assertThat(e.isPublished()).isTrue();
     }

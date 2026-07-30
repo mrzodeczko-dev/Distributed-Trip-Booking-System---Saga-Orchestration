@@ -245,7 +245,7 @@ services:
 
 
   # --------------------------------------------------------------------------------------------------------------------
-  # SECURITY PLATFORM — USER MYSQL
+  # SECURITY PLATFORM - USER MYSQL
   # --------------------------------------------------------------------------------------------------------------------
   user-mysql:
     image: mysql:9.6.0
@@ -285,7 +285,7 @@ services:
       - saga-network
 
   # --------------------------------------------------------------------------------------------------------------------
-  # SECURITY PLATFORM — AUTH REDIS
+  # SECURITY PLATFORM - AUTH REDIS
   # --------------------------------------------------------------------------------------------------------------------
   auth-redis:
     image: redis:8.2-alpine
@@ -322,7 +322,7 @@ services:
       - saga-network
 
   # --------------------------------------------------------------------------------------------------------------------
-  # SECURITY PLATFORM — USER SERVICE
+  # SECURITY PLATFORM - USER SERVICE
   # --------------------------------------------------------------------------------------------------------------------
   user-service:
     image: mrzodeczko/security-platform-user-service:2026-06-29-v31
@@ -363,7 +363,7 @@ services:
       - saga-network
 
   # --------------------------------------------------------------------------------------------------------------------
-  # SECURITY PLATFORM — AUTH SERVICE
+  # SECURITY PLATFORM - AUTH SERVICE
   # --------------------------------------------------------------------------------------------------------------------
   auth-service:
     image: mrzodeczko/security-platform-auth-service:2026-06-29-v31
@@ -404,7 +404,7 @@ services:
       - saga-network
 
   # --------------------------------------------------------------------------------------------------------------------
-  # SECURITY PLATFORM — API GATEWAY
+  # SECURITY PLATFORM - API GATEWAY
   # --------------------------------------------------------------------------------------------------------------------
   api-gateway-service:
     image: mrzodeczko/security-platform-api-gateway-service:2026-06-29-v31
@@ -432,14 +432,14 @@ services:
       REDIS_PORT: ${AUTH_REDIS_PORT:-6379}
       REDIS_PASSWORD: ${AUTH_REDIS_PASSWORD}
       SPRINGDOC_ENABLED: ${SPRINGDOC_ENABLED:-false}
-      # Routing — nadpisanie YAML przez env vars
+      # Routing - nadpisanie YAML przez env vars
       GATEWAY_ROUTES_0_PREFIX: /auth
       GATEWAY_ROUTES_0_TARGET: http://auth-service:8084
       GATEWAY_ROUTES_1_PREFIX: /users
       GATEWAY_ROUTES_1_TARGET: http://user-service:8086
       GATEWAY_ROUTES_2_PREFIX: /bookings
       GATEWAY_ROUTES_2_TARGET: http://booking-service:${BOOKING_SERVICE_PORT}
-      # Public paths — auth/users endpoints (bookings NIE — wymagają JWT)
+      # Public paths - auth/users endpoints (bookings NIE - wymagają JWT)
       GATEWAY_PUBLIC-PATHS_0: "POST:/auth/login"
       GATEWAY_PUBLIC-PATHS_1: "POST:/auth/refresh"
       GATEWAY_PUBLIC-PATHS_2: "POST:/auth/mfa"

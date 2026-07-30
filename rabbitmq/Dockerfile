@@ -1,4 +1,4 @@
-# Wersja obrazu bazowego — wartość przychodzi z .env (RABBITMQ_VERSION) przez 
+# Wersja obrazu bazowego - wartość przychodzi z .env (RABBITMQ_VERSION) przez 
 # docker compose build args. Jedno miejsce na upgrade RabbitMQ bez edycji Dockerfile.
 ARG RABBITMQ_VERSION
 

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Testy konsumenckie — weryfikują, że booking-service poprawnie
+ * Testy konsumenckie - weryfikują, że booking-service poprawnie
  * deserializuje wiadomości zdefiniowane w kontraktach flight-service.
  *
  * Stuby pochodzą z lokalnego repozytorium Maven

@@ -87,11 +87,11 @@ class SagaOrchestratorImplTest {
     }
 
     // ------------------------------------------------------------------
-    // handle() — forward phase
+    // handle() - forward phase
     // ------------------------------------------------------------------
 
     @Nested
-    @DisplayName("handle() — forward phase")
+    @DisplayName("handle() - forward phase")
     class HandleForwardReply {
 
         @Test
@@ -185,11 +185,11 @@ class SagaOrchestratorImplTest {
     }
 
     // ------------------------------------------------------------------
-    // handle() — compensation phase
+    // handle() - compensation phase
     // ------------------------------------------------------------------
 
     @Nested
-    @DisplayName("handle() — compensation phase")
+    @DisplayName("handle() - compensation phase")
     class HandleCompensationReply {
 
         @Test
@@ -259,11 +259,11 @@ class SagaOrchestratorImplTest {
     }
 
     // ------------------------------------------------------------------
-    // handle() — terminal state
+    // handle() - terminal state
     // ------------------------------------------------------------------
 
     @Nested
-    @DisplayName("handle() — terminal states")
+    @DisplayName("handle() - terminal states")
     class HandleTerminalState {
 
         @Test

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Testy konsumenckie — weryfikuja, ze booking-service poprawnie
+ * Testy konsumenckie - weryfikuja, ze booking-service poprawnie
  * deserializuje wiadomosci zdefiniowane w kontraktach payment-service.
  */
 @SpringBootTest(

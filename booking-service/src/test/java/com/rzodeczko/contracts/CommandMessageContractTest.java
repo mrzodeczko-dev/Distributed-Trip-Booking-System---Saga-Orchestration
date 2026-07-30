@@ -30,7 +30,7 @@ class CommandMessageContractTest {
     private static final UUID SAGA_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 
     // ------------------------------------------------------------------
-    // ParticipantCommandMessage — wysylane do uczestnikow sagi
+    // ParticipantCommandMessage - wysylane do uczestnikow sagi
     // ------------------------------------------------------------------
 
     @Nested
@@ -93,7 +93,7 @@ class CommandMessageContractTest {
     }
 
     // ------------------------------------------------------------------
-    // SagaReplyMessage — odbierane od uczestnikow sagi
+    // SagaReplyMessage - odbierane od uczestnikow sagi
     // ------------------------------------------------------------------
 
     @Nested

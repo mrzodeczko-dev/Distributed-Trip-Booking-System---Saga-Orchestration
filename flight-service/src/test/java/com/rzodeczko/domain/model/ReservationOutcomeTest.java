@@ -52,7 +52,7 @@ class ReservationOutcomeTest {
 
         @Test
         void shouldSucceedForNullCustomerName() {
-            // null customerName nie zaczyna sie od BLOCKED — przechodzi walidacje domenowa
+            // null customerName nie zaczyna sie od BLOCKED - przechodzi walidacje domenowa
             ReservationOutcome outcome = ReservationOutcome.attemptReserve(
                     SAGA_ID, null, DESTINATION
             );

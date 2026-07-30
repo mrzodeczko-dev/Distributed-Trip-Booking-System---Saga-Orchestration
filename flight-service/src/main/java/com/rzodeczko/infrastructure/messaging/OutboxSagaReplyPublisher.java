@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * Adapter portu SagaReplyPort - zapis odpowiedzi do Outboxa (atomowo z operacja biznesowa).
  * OutboxSagaReplyPublisher tłumaczy odpowiedź biznesową na zapis outboxowy, żeby orkiestrator dostał
- * SUCCESS/FAILURE dopiero po trwałym zapisie rezerwacji i idempotencji — zgodnie z czystą architekturą
+ * SUCCESS/FAILURE dopiero po trwałym zapisie rezerwacji i idempotencji - zgodnie z czystą architekturą
  * (port + adapter) i wzorcem transactional outbox.
  * Bez tej klasy musiałbyś albo zepsuć warstwy (RabbitMQ w application), albo stracić atomowość
  * (wysyłka poza transakcją).

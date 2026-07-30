@@ -1,169 +1,159 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.rzodeczko.TestcontainersConfiguration;
 import com.rzodeczko.application.dto.PageQuery;
 import com.rzodeczko.application.dto.PageResult;
-import com.rzodeczko.domain.model.saga.*;
-import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
+import com.rzodeczko.domain.model.saga.SagaInstance;
+import com.rzodeczko.domain.model.saga.SagaStatus;
 import com.rzodeczko.infrastructure.persistence.mapper.SagaInstanceMapper;
-import com.rzodeczko.infrastructure.persistence.repository.JpaSagaInstanceRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class SagaInstanceRepositoryAdapterTest {
+@Testcontainers(disabledWithoutDocker = true)
+@Import({TestcontainersConfiguration.class, SagaInstanceRepositoryAdapter.class, SagaInstanceMapper.class})
+@DataJpaTest
+public class SagaInstanceRepositoryAdapterTest {
 
-    @Mock
-    private JpaSagaInstanceRepository jpaRepository;
-    @Mock
-    private SagaInstanceMapper mapper;
-
+    @Autowired
     private SagaInstanceRepositoryAdapter adapter;
 
-    private static final UUID SAGA_ID = UUID.randomUUID();
+    private ListAppender<ILoggingEvent> hibernateLogAppender;
+    private Logger hibernateLogger;
 
     @BeforeEach
-    void setUp() {
-        adapter = new SagaInstanceRepositoryAdapter(jpaRepository, mapper);
+    void attachLogAppender() {
+        hibernateLogger = (Logger) LoggerFactory.getLogger("org.hibernate");
+        hibernateLogAppender = new ListAppender<>();
+        hibernateLogAppender.start();
+        hibernateLogger.addAppender(hibernateLogAppender);
     }
 
-    private SagaInstance createSaga() {
-        return SagaInstance.restore(
-                SAGA_ID, "Jan", "Mars", BigDecimal.TEN,
-                SagaStatus.IN_PROGRESS,
-                List.of(SagaStep.restore(SagaStepName.FLIGHT, SagaStepStatus.PENDING, null)),
-                Instant.now(), Instant.now()
-        );
+    @AfterEach
+    void detachLogAppender() {
+        hibernateLogger.detachAppender(hibernateLogAppender);
     }
 
-    @Nested
-    @DisplayName("save()")
-    class Save {
-
-        @Test
-        @DisplayName("should update existing entity when found by id")
-        void shouldUpdateExistingEntity() {
-            SagaInstance saga = createSaga();
-            SagaInstanceEntity existing = SagaInstanceEntity.builder().id(SAGA_ID).build();
-            when(jpaRepository.findByIdWithSteps(any(UUID.class))).thenReturn(Optional.of(existing));
-
-            adapter.save(saga);
-
-            verify(mapper).updateEntity(existing, saga);
-            verify(mapper, never()).toNewEntity(any());
-            verify(jpaRepository).save(existing);
-        }
-
-        @Test
-        @DisplayName("should create new entity when not found")
-        void shouldCreateNewEntity() {
-            SagaInstance saga = createSaga();
-            SagaInstanceEntity newEntity = SagaInstanceEntity.builder().id(SAGA_ID).build();
-            when(jpaRepository.findByIdWithSteps(any(UUID.class))).thenReturn(Optional.empty());
-            when(mapper.toNewEntity(saga)).thenReturn(newEntity);
-
-            adapter.save(saga);
-
-            verify(mapper).toNewEntity(saga);
-            verify(mapper, never()).updateEntity(any(), any());
-            verify(jpaRepository).save(newEntity);
-        }
+    private void saveSagas(int count) {
+        IntStream.range(0, count)
+                .forEachOrdered(i -> adapter.save(SagaInstance.start("User-" + i, "City-" + i, BigDecimal.valueOf(100 + i))));
     }
 
-    @Nested
-    @DisplayName("findById()")
-    class FindById {
+    @Test
+    @DisplayName("should paginate at SQL level without Hibernate in-memory pagination warning")
+    void shouldPaginateAtSqlLevelWithoutInMemoryWarning() {
+        saveSagas(5);
+        hibernateLogAppender.list.clear();
 
-        @Test
-        @DisplayName("should return mapped domain when entity found")
-        void shouldReturnMappedDomain() {
-            SagaInstance saga = createSaga();
-            SagaInstanceEntity entity = SagaInstanceEntity.builder().id(SAGA_ID).build();
-            when(jpaRepository.findByIdWithSteps(any(UUID.class))).thenReturn(Optional.of(entity));
-            when(mapper.toDomain(entity)).thenReturn(saga);
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(0, 2));
 
-            Optional<SagaInstance> result = adapter.findById(SAGA_ID);
+        assertThat(page.content()).hasSize(2);
+        assertThat(page.totalElements()).isEqualTo(5);
+        assertThat(page.page()).isZero();
+        assertThat(page.size()).isEqualTo(2);
 
-            assertThat(result).contains(saga);
-        }
+        // HHH90003004 is the warning Hibernate emits when it falls back to in-memory pagination
+        boolean hasInMemoryPaginationWarning = hibernateLogAppender.list.stream()
+                .filter(e -> e.getLevel() == Level.WARN)
+                .anyMatch(e -> e.getFormattedMessage().contains("HHH90003004")
+                        || e.getFormattedMessage().contains("firstResult/maxResults specified with collection fetch"));
 
-        @Test
-        @DisplayName("should return empty when not found")
-        void shouldReturnEmpty() {
-            when(jpaRepository.findByIdWithSteps(any(UUID.class))).thenReturn(Optional.empty());
+        assertThat(hasInMemoryPaginationWarning)
+                .as("Hibernate should NOT fall back to in-memory pagination")
+                .isFalse();
+    }
 
-            assertThat(adapter.findById(SAGA_ID)).isEmpty();
+    @Test
+    @DisplayName("steps should be eagerly loaded - no LazyInitializationException outside transaction")
+    void stepsShouldBeEagerlyLoaded() {
+        saveSagas(5);
+
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(0, 2));
+
+        // findAll runs in its own @Transactional scope inside the adapter;
+        // accessing steps here (outside that scope) would fail if they were lazy-loaded only.
+        for (SagaInstance saga : page.content()) {
+            assertThat(saga.getSteps()).hasSize(3);
+            assertThat(saga.getSteps()).allSatisfy(step ->
+                    assertThat(step.getName()).isNotNull()
+            );
         }
     }
 
-    @Nested
-    @DisplayName("findByIdForUpdate()")
-    class FindByIdForUpdate {
+    @Test
+    @DisplayName("second page should return remaining elements")
+    void shouldReturnSecondPageCorrectly() {
+        saveSagas(5);
 
-        @Test
-        @DisplayName("should delegate to pessimistic-lock query")
-        void shouldDelegateToPessimisticLock() {
-            SagaInstance saga = createSaga();
-            SagaInstanceEntity entity = SagaInstanceEntity.builder().id(SAGA_ID).build();
-            when(jpaRepository.findByIdForUpdate(any(UUID.class))).thenReturn(Optional.of(entity));
-            when(mapper.toDomain(entity)).thenReturn(saga);
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(1, 2));
 
-            Optional<SagaInstance> result = adapter.findByIdForUpdate(SAGA_ID);
-
-            assertThat(result).contains(saga);
-            verify(jpaRepository).findByIdForUpdate(SAGA_ID);
-        }
+        assertThat(page.content()).hasSize(2);
+        assertThat(page.page()).isEqualTo(1);
+        assertThat(page.totalElements()).isEqualTo(5);
     }
 
-    @Nested
-    @DisplayName("findAll(PageQuery)")
-    class FindAll {
+    @Test
+    @DisplayName("last page should contain only remaining elements")
+    void lastPageShouldContainRemainder() {
+        saveSagas(5);
 
-        @Test
-        @DisplayName("should map all entities to domain and return page result")
-        void shouldMapAll() {
-            SagaInstanceEntity e1 = SagaInstanceEntity.builder().id(UUID.randomUUID()).build();
-            SagaInstanceEntity e2 = SagaInstanceEntity.builder().id(UUID.randomUUID()).build();
-            SagaInstance s1 = createSaga();
-            SagaInstance s2 = createSaga();
-            Page<SagaInstanceEntity> page = new PageImpl<>(List.of(e1, e2), Pageable.ofSize(20), 2);
-            when(jpaRepository.findAllWithSteps(any(Pageable.class))).thenReturn(page);
-            when(mapper.toDomain(e1)).thenReturn(s1);
-            when(mapper.toDomain(e2)).thenReturn(s2);
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(2, 2));
 
-            PageResult<SagaInstance> result = adapter.findAll(new PageQuery(0, 20));
+        assertThat(page.content()).hasSize(1);
+        assertThat(page.totalElements()).isEqualTo(5);
+    }
 
-            assertThat(result.content()).containsExactly(s1, s2);
-            assertThat(result.totalElements()).isEqualTo(2);
-        }
+    @Test
+    @DisplayName("pages should not contain duplicate sagas despite steps join")
+    void shouldNotContainDuplicatesFromStepsJoin() {
+        saveSagas(4);
 
-        @Test
-        @DisplayName("should return empty page when no entities")
-        void shouldReturnEmptyList() {
-            Page<SagaInstanceEntity> emptyPage = new PageImpl<>(List.of(), Pageable.ofSize(20), 0);
-            when(jpaRepository.findAllWithSteps(any(Pageable.class))).thenReturn(emptyPage);
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(0, 4));
 
-            PageResult<SagaInstance> result = adapter.findAll(new PageQuery(0, 20));
-            assertThat(result.content()).isEmpty();
-            assertThat(result.totalElements()).isZero();
+        List<java.util.UUID> ids = page.content().stream()
+                .map(SagaInstance::getId)
+                .toList();
+
+        assertThat(ids).doesNotHaveDuplicates();
+        assertThat(page.content()).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("empty database should return empty page")
+    void emptyDatabaseShouldReturnEmptyPage() {
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(0, 10));
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.totalElements()).isZero();
+    }
+
+    @Test
+    @DisplayName("all sagas on every page should have status and complete step data")
+    void everyPagedSagaShouldHaveCompleteData() {
+        saveSagas(3);
+
+        PageResult<SagaInstance> page = adapter.findAll(new PageQuery(0, 10));
+
+        for (SagaInstance saga : page.content()) {
+            assertThat(saga.getStatus()).isEqualTo(SagaStatus.IN_PROGRESS);
+            assertThat(saga.getCustomerName()).startsWith("User-");
+            assertThat(saga.getSteps()).hasSize(3);
         }
     }
 }

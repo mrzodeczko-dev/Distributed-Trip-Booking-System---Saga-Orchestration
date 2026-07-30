@@ -6,6 +6,7 @@ import com.rzodeczko.application.dto.SagaInstanceDto;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.port.out.SagaInstanceRepository;
 import com.rzodeczko.domain.exception.SagaNotFoundException;
+import com.rzodeczko.domain.model.saga.SagaInstance;
 
 import java.util.UUID;
 
@@ -27,7 +28,7 @@ public class SagaQueryServiceImpl implements GetSagaUseCase {
 
     @Override
     public PageResult<SagaInstanceDto> list(PageQuery query) {
-        PageResult<com.rzodeczko.domain.model.saga.SagaInstance> page = sagaInstanceRepository.findAll(query);
+        PageResult<SagaInstance> page = sagaInstanceRepository.findAll(query);
         return new PageResult<>(
                 page.content().stream().map(SagaInstanceDto::from).toList(),
                 page.page(),

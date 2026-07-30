@@ -47,8 +47,10 @@ public class SagaInstanceRepositoryAdapter implements SagaInstanceRepository {
 
     @Override
     public PageResult<SagaInstance> findAll(PageQuery query) {
-        Page<SagaInstanceEntity> page = jpaSagaInstanceRepository
-                .findAllWithSteps(PageRequest.of(query.page(), query.size()));
+
+        Page<SagaInstanceEntity> page = jpaSagaInstanceRepository.findAllWithSteps(
+                PageRequest.of(query.page(), query.size()));
+
         return new PageResult<>(
                 page.getContent().stream().map(mapper::toDomain).toList(),
                 page.getNumber(),

@@ -148,7 +148,7 @@ class SagaFlowIntegrationTest extends IntegrationTestBase {
 
     @Test
     void shouldPublishOutboxEventsToRabbitMq() throws Exception {
-        // Start a saga — creates FLIGHT_RESERVE outbox event
+        // Start a saga - creates FLIGHT_RESERVE outbox event
         mockMvc.perform(post("/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

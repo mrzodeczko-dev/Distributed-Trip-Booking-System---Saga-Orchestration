@@ -3,6 +3,7 @@ package com.rzodeczko.infrastructure.persistence.entity;
 import com.rzodeczko.domain.model.saga.SagaStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -42,6 +43,7 @@ public class SagaInstanceEntity {
 
     @OneToMany(mappedBy = "saga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
+    @BatchSize(size = 2)
     private List<SagaStepEntity> steps = new ArrayList<>();
 
     @Column(nullable = false)

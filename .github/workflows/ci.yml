@@ -44,7 +44,7 @@ jobs:
           path: ~/.m2/repository/com/rzodeczko/saga-common
           key: saga-common-${{ github.sha }}
 
-  # --- Stub providers — flight, hotel, payment budują się równolegle i instalują stuby ---
+  # --- Stub providers - flight, hotel, payment budują się równolegle i instalują stuby ---
   build-stub-providers:
     name: ${{ matrix.service }} (stubs provider)
     runs-on: ubuntu-latest
