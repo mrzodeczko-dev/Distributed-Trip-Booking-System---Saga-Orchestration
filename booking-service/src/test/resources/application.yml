@@ -7,3 +7,19 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+
+app:
+  rabbitmq:
+    topology:
+      commands-exchange: x.saga.commands
+      replies-exchange: x.saga.replies
+      dlx-exchange: x.saga.dlx
+      reply-queue: q.booking-service.replies
+      reply-dlq: q.booking-service.replies.dlq
+      reply-routing-key: saga.reply
+      reply-dlq-routing-key: reply.dlq
+      flight-command-routing-key: flight.command
+      hotel-command-routing-key: hotel.command
+      payment-command-routing-key: payment.command
+    outbox:
+      poll-interval-ms: 500
