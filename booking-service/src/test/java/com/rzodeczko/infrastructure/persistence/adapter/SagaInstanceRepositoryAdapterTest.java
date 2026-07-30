@@ -27,10 +27,10 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Testcontainers(disabledWithoutDocker = true)
 @Import({TestcontainersConfiguration.class, SagaInstanceRepositoryAdapter.class, SagaInstanceMapper.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
+@Testcontainers(disabledWithoutDocker = true)
 public class SagaInstanceRepositoryAdapterTest {
 
     @Autowired

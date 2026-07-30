@@ -1,14 +1,15 @@
 package com.rzodeczko;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
 import com.rzodeczko.common.outbox.OutboxEventEntity;
 import com.rzodeczko.common.outbox.OutboxEventRepository;
+import com.rzodeczko.infrastructure.messaging.dto.SagaReplyMessage;
 import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
 import com.rzodeczko.infrastructure.persistence.repository.JpaSagaInstanceRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,10 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * End-to-end integration test for the full saga flow:
- * POST booking → outbox saves command → publisher sends to RabbitMQ →
- * simulate reply → saga progresses → repeat for all steps.
+ * End-to-end integration test for the full saga flow
  */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 class SagaFlowIntegrationTest extends IntegrationTestBase {
 
