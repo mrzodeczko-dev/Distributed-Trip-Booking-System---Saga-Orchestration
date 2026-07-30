@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.rzodeczko.TestcontainersConfiguration;
+import com.rzodeczko.MySqlTestcontainerConfig;
 import com.rzodeczko.application.dto.PageQuery;
 import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.saga.SagaInstance;
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
@@ -27,10 +28,14 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Import({TestcontainersConfiguration.class, SagaInstanceRepositoryAdapter.class, SagaInstanceMapper.class})
+@Import({MySqlTestcontainerConfig.class, SagaInstanceRepositoryAdapter.class, SagaInstanceMapper.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
 @Testcontainers(disabledWithoutDocker = true)
+@Sql(
+        statements = {"DELETE FROM saga_steps", "DELETE FROM saga_instances"},
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS
+)
 public class SagaInstanceRepositoryAdapterTest {
 
     @Autowired

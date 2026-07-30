@@ -7,12 +7,12 @@ import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Import(TestcontainersConfiguration.class)
+@Import({RabbitMqTestcontainersConfig.class, MySqlTestcontainerConfig.class})
 @Testcontainers(disabledWithoutDocker = true)
 public abstract class IntegrationTestBase {
 
     @BeforeEach
-    @Sql(statements = {"truncate table outbox_event", "TRUNCATE TABLE saga_step", "TRUNCATE TABLE saga_instance"})
+    @Sql(statements = {"delete from outbox_event", "delete from saga_step", "delete fromłó saga_instance"})
     void cleanDatabase() {
     }
 }
