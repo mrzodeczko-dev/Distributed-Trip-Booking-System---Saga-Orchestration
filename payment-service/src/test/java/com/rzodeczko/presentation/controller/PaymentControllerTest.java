@@ -1,7 +1,10 @@
 package com.rzodeczko.presentation.controller;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.port.in.GetPaymentUseCase;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import com.rzodeczko.presentation.dto.response.PaymentResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,33 +40,41 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("listAll")
-    class ListAll {
+    @DisplayName("getPayments")
+    class GetPayments {
 
         @Test
-        @DisplayName("returns 200 OK with the mapped payment list")
-        void returnsMappedList() {
+        @DisplayName("returns 200 OK with the mapped payment page")
+        void returnsMappedPage() {
             PaymentDto dto = new PaymentDto(
                     UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                     "Alice", BigDecimal.TEN, "CHARGED", Instant.now());
-            when(getPaymentUseCase.listAll()).thenReturn(List.of(dto));
+            when(getPaymentUseCase.list(new PageQuery(0, 20)))
+                    .thenReturn(new PageResult<>(List.of(dto), 0, 20, 1));
 
-            ResponseEntity<List<PaymentResponseDto>> response = controller.listAll();
+            ResponseEntity<PagedResponseDto<PaymentResponseDto>> response =
+                    controller.getPayments(0, 20);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).hasSize(1);
-            assertThat(response.getBody().getFirst().customerName()).isEqualTo("Alice");
+            assertThat(response.getBody().content()).hasSize(1);
+            assertThat(response.getBody().content().getFirst().customerName()).isEqualTo("Alice");
+            assertThat(response.getBody().totalElements()).isEqualTo(1);
+            assertThat(response.getBody().page()).isZero();
+            assertThat(response.getBody().size()).isEqualTo(20);
         }
 
         @Test
-        @DisplayName("returns 200 OK with an empty list when there are no payments")
-        void returnsEmptyList() {
-            when(getPaymentUseCase.listAll()).thenReturn(List.of());
+        @DisplayName("returns 200 OK with an empty page when there are no payments")
+        void returnsEmptyPage() {
+            when(getPaymentUseCase.list(new PageQuery(0, 20)))
+                    .thenReturn(new PageResult<>(List.of(), 0, 20, 0));
 
-            ResponseEntity<List<PaymentResponseDto>> response = controller.listAll();
+            ResponseEntity<PagedResponseDto<PaymentResponseDto>> response =
+                    controller.getPayments(0, 20);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isEmpty();
+            assertThat(response.getBody().content()).isEmpty();
+            assertThat(response.getBody().totalElements()).isZero();
         }
     }
 

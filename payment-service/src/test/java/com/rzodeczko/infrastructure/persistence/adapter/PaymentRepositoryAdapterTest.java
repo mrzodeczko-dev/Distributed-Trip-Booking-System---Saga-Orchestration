@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.Payment;
 import com.rzodeczko.domain.model.PaymentStatus;
 import com.rzodeczko.infrastructure.persistence.entity.PaymentEntity;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -129,16 +133,19 @@ class PaymentRepositoryAdapterTest {
     class FindAll {
 
         @Test
-        @DisplayName("maps all found entities to domain payments")
-        void mapsAllEntities() {
+        @DisplayName("maps all found entities to domain payments and returns PageResult")
+        void mapsAllEntitiesToPageResult() {
             PaymentEntity entity = PaymentEntity.builder().id(UUID.randomUUID()).build();
             Payment domain = Payment.charge(UUID.randomUUID(), "Alice", BigDecimal.TEN);
-            when(jpaPaymentRepository.findAll()).thenReturn(List.of(entity));
+            when(jpaPaymentRepository.findAll(any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(entity)));
             when(mapper.toDomain(entity)).thenReturn(domain);
 
-            List<Payment> result = adapter.findAll();
+            PageResult<Payment> result = adapter.findAll(new PageQuery(0, 20));
 
-            assertThat(result).containsExactly(domain);
+            assertThat(result.content()).containsExactly(domain);
+            assertThat(result.totalElements()).isEqualTo(1);
+            assertThat(result.page()).isZero();
         }
     }
 }

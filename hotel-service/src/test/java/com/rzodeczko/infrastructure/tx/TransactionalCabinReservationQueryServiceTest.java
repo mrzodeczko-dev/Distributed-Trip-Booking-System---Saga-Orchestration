@@ -1,6 +1,8 @@
 package com.rzodeczko.infrastructure.tx;
 
 import com.rzodeczko.application.dto.CabinReservationDto;
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.service.CabinReservationQueryServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,14 +29,17 @@ class TransactionalCabinReservationQueryServiceTest {
     private TransactionalCabinReservationQueryService sut;
 
     @Test
-    @DisplayName("listAll() delegates and returns result")
-    void shouldDelegateListAll() {
+    @DisplayName("list() delegates and returns result")
+    void shouldDelegateList() {
         var dto = new CabinReservationDto("id", "saga", "Jan", "Zakopane", "RESERVED", Instant.now());
-        when(delegate.listAll()).thenReturn(List.of(dto));
+        var query = new PageQuery(0, 20);
+        var pageResult = new PageResult<>(List.of(dto), 0, 20, 1);
+        when(delegate.list(query)).thenReturn(pageResult);
 
-        List<CabinReservationDto> result = sut.listAll();
+        PageResult<CabinReservationDto> result = sut.list(query);
 
-        assertThat(result).containsExactly(dto);
+        assertThat(result).isEqualTo(pageResult);
+        assertThat(result.content()).containsExactly(dto);
     }
 
     @Test

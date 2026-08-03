@@ -1,8 +1,9 @@
 package com.rzodeczko.application.port.out;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.Payment;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,5 +14,5 @@ public interface PaymentRepository {
 
     Optional<Payment> findBySagaId(UUID sagaId);
 
-    List<Payment> findAll();
+    PageResult<Payment> findAll(PageQuery query);
 }

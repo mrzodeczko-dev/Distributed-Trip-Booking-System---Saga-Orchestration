@@ -1,6 +1,8 @@
 package com.rzodeczko.application.service;
 
 import com.rzodeczko.application.dto.CabinReservationDto;
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
 import com.rzodeczko.domain.model.CabinReservation;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,29 +36,37 @@ class CabinReservationQueryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("listAll")
-    class ListAll {
+    @DisplayName("list")
+    class ListPaginated {
 
         @Test
         void shouldMapAllReservationsToDtos() {
             CabinReservation r1 = CabinReservation.reserve(SAGA_ID, "Jan", "Venus");
             CabinReservation r2 = CabinReservation.reserve(UUID.randomUUID(), "Anna", "Earth");
-            when(cabinReservationRepository.findAll()).thenReturn(List.of(r1, r2));
+            PageQuery query = new PageQuery(0, 20);
+            when(cabinReservationRepository.findAll(query))
+                    .thenReturn(new PageResult<>(List.of(r1, r2), 0, 20, 2));
 
-            List<CabinReservationDto> result = service.listAll();
+            PageResult<CabinReservationDto> result = service.list(query);
 
-            assertThat(result).hasSize(2);
-            assertThat(result).extracting(CabinReservationDto::customerName)
+            assertThat(result.content()).hasSize(2);
+            assertThat(result.content()).extracting(CabinReservationDto::customerName)
                     .containsExactlyInAnyOrder("Jan", "Anna");
+            assertThat(result.totalElements()).isEqualTo(2);
+            assertThat(result.page()).isZero();
+            assertThat(result.size()).isEqualTo(20);
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoReservations() {
-            when(cabinReservationRepository.findAll()).thenReturn(List.of());
+        void shouldReturnEmptyPageWhenNoReservations() {
+            PageQuery query = new PageQuery(0, 20);
+            when(cabinReservationRepository.findAll(query))
+                    .thenReturn(new PageResult<>(List.of(), 0, 20, 0));
 
-            List<CabinReservationDto> result = service.listAll();
+            PageResult<CabinReservationDto> result = service.list(query);
 
-            assertThat(result).isEmpty();
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isZero();
         }
     }
 

@@ -1,13 +1,18 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
 import com.rzodeczko.domain.model.CabinReservation;
+import com.rzodeczko.infrastructure.persistence.entity.CabinReservationEntity;
 import com.rzodeczko.infrastructure.persistence.mapper.CabinReservationMapper;
 import com.rzodeczko.infrastructure.persistence.repository.JpaCabinReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +46,14 @@ public class CabinReservationRepositoryAdapter implements CabinReservationReposi
     }
 
     @Override
-    public List<CabinReservation> findAll() {
-        return repository.findAll().stream().map(mapper::toDomain).toList();
+    public PageResult<CabinReservation> findAll(PageQuery query) {
+        Page<CabinReservationEntity> page = repository.findAll(
+                PageRequest.of(query.page(), query.size(), Sort.by("createdAt", "id").descending()));
+        return new PageResult<>(
+                page.getContent().stream().map(mapper::toDomain).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements()
+        );
     }
 }

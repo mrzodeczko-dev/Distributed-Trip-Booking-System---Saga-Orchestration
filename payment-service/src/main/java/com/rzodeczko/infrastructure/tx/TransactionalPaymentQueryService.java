@@ -1,11 +1,12 @@
 package com.rzodeczko.infrastructure.tx;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.port.in.GetPaymentUseCase;
 import com.rzodeczko.application.service.PaymentQueryServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,8 +20,8 @@ public class TransactionalPaymentQueryService implements GetPaymentUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentDto> listAll() {
-        return delegate.listAll();
+    public PageResult<PaymentDto> list(PageQuery query) {
+        return delegate.list(query);
     }
 
     @Override

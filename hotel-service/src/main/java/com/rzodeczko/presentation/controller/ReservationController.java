@@ -1,15 +1,15 @@
 package com.rzodeczko.presentation.controller;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
+import com.rzodeczko.application.dto.CabinReservationDto;
 import com.rzodeczko.application.port.in.GetCabinReservationUseCase;
 import com.rzodeczko.presentation.dto.response.CabinReservationResponseDto;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,13 +24,16 @@ public class ReservationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CabinReservationResponseDto>> listAll() {
-        return ResponseEntity.ok(getCabinReservationUseCase
-                .listAll()
-                .stream()
-                .map(CabinReservationResponseDto::from)
-                .toList()
-        );
+    public ResponseEntity<PagedResponseDto<CabinReservationResponseDto>> getReservations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageResult<CabinReservationDto> result = getCabinReservationUseCase.list(new PageQuery(page, size));
+        return ResponseEntity.ok(new PagedResponseDto<>(
+                result.content().stream().map(CabinReservationResponseDto::from).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements()
+        ));
     }
 
     @GetMapping("/{sagaId}")

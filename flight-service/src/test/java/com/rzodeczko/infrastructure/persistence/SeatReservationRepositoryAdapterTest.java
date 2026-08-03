@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.persistence;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.ReservationStatus;
 import com.rzodeczko.domain.model.SeatReservation;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -132,27 +137,33 @@ class SeatReservationRepositoryAdapterTest {
     @DisplayName("findAll")
     class FindAll {
 
+        private final PageQuery pageQuery = new PageQuery(0, 20);
+
         @Test
-        void shouldReturnAllMappedReservations() {
+        void shouldReturnPagedMappedReservations() {
             SeatReservationEntity entity = SeatReservationEntity.builder().id(ID).sagaId(SAGA_ID).build();
             SeatReservation domain = SeatReservation.restore(
                     ID, SAGA_ID, "Jan", "Mars", ReservationStatus.RESERVED, Instant.now()
             );
-            when(repository.findAll()).thenReturn(List.of(entity));
+            PageImpl<SeatReservationEntity> springPage = new PageImpl<>(List.of(entity));
+            when(repository.findAll(any(Pageable.class))).thenReturn(springPage);
             when(mapper.toDomain(entity)).thenReturn(domain);
 
-            List<SeatReservation> result = adapter.findAll();
+            PageResult<SeatReservation> result = adapter.findAll(pageQuery);
 
-            assertThat(result).containsExactly(domain);
+            assertThat(result.content()).containsExactly(domain);
+            assertThat(result.totalElements()).isEqualTo(1);
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoEntities() {
-            when(repository.findAll()).thenReturn(List.of());
+        void shouldReturnEmptyPageWhenNoEntities() {
+            PageImpl<SeatReservationEntity> springPage = new PageImpl<>(List.of());
+            when(repository.findAll(any(Pageable.class))).thenReturn(springPage);
 
-            List<SeatReservation> result = adapter.findAll();
+            PageResult<SeatReservation> result = adapter.findAll(pageQuery);
 
-            assertThat(result).isEmpty();
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isEqualTo(0);
         }
     }
 }

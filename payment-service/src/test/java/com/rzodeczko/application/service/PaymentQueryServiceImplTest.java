@@ -1,5 +1,7 @@
 package com.rzodeczko.application.service;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.port.out.PaymentRepository;
 import com.rzodeczko.domain.model.Payment;
@@ -37,30 +39,38 @@ class PaymentQueryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("listAll")
-    class ListAll {
+    @DisplayName("list")
+    class ListPaginated {
 
         @Test
         @DisplayName("maps all repository payments to DTOs")
         void mapsAllPayments() {
             Payment payment = Payment.charge(sagaId, "Alice", BigDecimal.TEN);
-            when(paymentRepository.findAll()).thenReturn(List.of(payment));
+            PageQuery query = new PageQuery(0, 20);
+            when(paymentRepository.findAll(query))
+                    .thenReturn(new PageResult<>(List.of(payment), 0, 20, 1));
 
-            List<PaymentDto> result = service.listAll();
+            PageResult<PaymentDto> result = service.list(query);
 
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().sagaId()).isEqualTo(sagaId.toString());
-            assertThat(result.getFirst().customerName()).isEqualTo("Alice");
+            assertThat(result.content()).hasSize(1);
+            assertThat(result.content().getFirst().sagaId()).isEqualTo(sagaId.toString());
+            assertThat(result.content().getFirst().customerName()).isEqualTo("Alice");
+            assertThat(result.totalElements()).isEqualTo(1);
+            assertThat(result.page()).isZero();
+            assertThat(result.size()).isEqualTo(20);
         }
 
         @Test
-        @DisplayName("returns empty list when repository has no payments")
-        void returnsEmptyListWhenNoPayments() {
-            when(paymentRepository.findAll()).thenReturn(List.of());
+        @DisplayName("returns empty page when repository has no payments")
+        void returnsEmptyPageWhenNoPayments() {
+            PageQuery query = new PageQuery(0, 20);
+            when(paymentRepository.findAll(query))
+                    .thenReturn(new PageResult<>(List.of(), 0, 20, 0));
 
-            List<PaymentDto> result = service.listAll();
+            PageResult<PaymentDto> result = service.list(query);
 
-            assertThat(result).isEmpty();
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isZero();
         }
     }
 

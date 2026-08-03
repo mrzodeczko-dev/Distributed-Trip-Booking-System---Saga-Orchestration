@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.domain.model.CabinReservation;
 import com.rzodeczko.domain.model.ReservationStatus;
 import com.rzodeczko.infrastructure.persistence.entity.CabinReservationEntity;
@@ -14,6 +16,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
@@ -131,7 +135,7 @@ class CabinReservationRepositoryAdapterTest {
     class FindAll {
 
         @Test
-        void shouldMapAllEntitiesToDomain() {
+        void shouldMapAllEntitiesToDomainAndReturnPageResult() {
             CabinReservationEntity entity1 = CabinReservationEntity.builder().id(ID).build();
             CabinReservationEntity entity2 = CabinReservationEntity.builder().id(UUID.randomUUID()).build();
             CabinReservation domain1 = CabinReservation.restore(
@@ -140,13 +144,16 @@ class CabinReservationRepositoryAdapterTest {
             CabinReservation domain2 = CabinReservation.restore(
                     UUID.randomUUID(), UUID.randomUUID(), "Anna", "Earth", ReservationStatus.RESERVED, Instant.now()
             );
-            when(repository.findAll()).thenReturn(List.of(entity1, entity2));
+            when(repository.findAll(any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(entity1, entity2)));
             when(mapper.toDomain(entity1)).thenReturn(domain1);
             when(mapper.toDomain(entity2)).thenReturn(domain2);
 
-            List<CabinReservation> result = adapter.findAll();
+            PageResult<CabinReservation> result = adapter.findAll(new PageQuery(0, 20));
 
-            assertThat(result).containsExactly(domain1, domain2);
+            assertThat(result.content()).containsExactly(domain1, domain2);
+            assertThat(result.totalElements()).isEqualTo(2);
+            assertThat(result.page()).isZero();
         }
     }
 }

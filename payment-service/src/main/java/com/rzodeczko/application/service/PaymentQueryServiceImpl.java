@@ -1,10 +1,12 @@
 package com.rzodeczko.application.service;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.port.in.GetPaymentUseCase;
 import com.rzodeczko.application.port.out.PaymentRepository;
+import com.rzodeczko.domain.model.Payment;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,11 +19,14 @@ public class PaymentQueryServiceImpl implements GetPaymentUseCase {
     }
 
     @Override
-    public List<PaymentDto> listAll() {
-        return paymentRepository.findAll()
-                .stream()
-                .map(PaymentDto::from)
-                .toList();
+    public PageResult<PaymentDto> list(PageQuery query) {
+        PageResult<Payment> page = paymentRepository.findAll(query);
+        return new PageResult<>(
+                page.content().stream().map(PaymentDto::from).toList(),
+                page.page(),
+                page.size(),
+                page.totalElements()
+        );
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.tx;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.service.PaymentQueryServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -28,14 +30,16 @@ class TransactionalPaymentQueryServiceTest {
     private TransactionalPaymentQueryService sut;
 
     @Test
-    @DisplayName("listAll() delegates and returns result")
-    void shouldDelegateListAll() {
+    @DisplayName("list() delegates and returns result")
+    void shouldDelegateList() {
+        var query = new PageQuery(0, 20);
         var dto = new PaymentDto("id", "saga", "Jan", BigDecimal.TEN, "CHARGED", Instant.now());
-        when(delegate.listAll()).thenReturn(List.of(dto));
+        var pageResult = new PageResult<>(List.of(dto), 0, 20, 1);
+        when(delegate.list(query)).thenReturn(pageResult);
 
-        List<PaymentDto> result = sut.listAll();
+        PageResult<PaymentDto> result = sut.list(query);
 
-        assertThat(result).containsExactly(dto);
+        assertThat(result).isEqualTo(pageResult);
     }
 
     @Test

@@ -1,13 +1,18 @@
 package com.rzodeczko.infrastructure.persistence.adapter;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.port.out.PaymentRepository;
 import com.rzodeczko.domain.model.Payment;
+import com.rzodeczko.infrastructure.persistence.entity.PaymentEntity;
 import com.rzodeczko.infrastructure.persistence.mapper.PaymentMapper;
 import com.rzodeczko.infrastructure.persistence.repository.JpaPaymentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +46,14 @@ public class PaymentRepositoryAdapter implements PaymentRepository {
     }
 
     @Override
-    public List<Payment> findAll() {
-        return jpaPaymentRepository.findAll().stream().map(mapper::toDomain).toList();
+    public PageResult<Payment> findAll(PageQuery query) {
+        Page<PaymentEntity> page = jpaPaymentRepository.findAll(
+                PageRequest.of(query.page(), query.size(), Sort.by("createdAt").descending()));
+        return new PageResult<>(
+                page.getContent().stream().map(mapper::toDomain).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements()
+        );
     }
 }
