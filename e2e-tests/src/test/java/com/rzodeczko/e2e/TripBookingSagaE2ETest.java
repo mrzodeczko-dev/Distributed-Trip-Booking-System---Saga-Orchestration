@@ -3,10 +3,13 @@ package com.rzodeczko.e2e;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,9 +23,43 @@ import static org.awaitility.Awaitility.await;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TripBookingSagaE2ETest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TripBookingSagaE2ETest.class);
+
     @BeforeAll
     static void startEnvironment() {
         SagaEnvironment.start();
+    }
+
+    private Response awaitTerminalState(String sagaId, int timeoutSeconds) {
+        AtomicReference<String> lastStatus = new AtomicReference<>("unknown");
+
+        await().atMost(timeoutSeconds, TimeUnit.SECONDS)
+                .pollInterval(2, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    Response poll = given()
+                            .baseUri(SagaEnvironment.bookingBaseUrl())
+                    .when()
+                            .get("/bookings/" + sagaId)
+                    .then()
+                            .statusCode(200)
+                            .extract().response();
+
+                    String status = poll.jsonPath().getString("status");
+                    lastStatus.set(status);
+                    LOG.info("[E2E] Polling saga={} status={}", sagaId, status);
+
+                    assertThat(status)
+                            .as("Saga %s should reach a terminal state (last=%s)", sagaId, status)
+                            .isIn("COMPLETED", "CANCELLED", "COMPENSATION_FAILED");
+                });
+
+        return given()
+                .baseUri(SagaEnvironment.bookingBaseUrl())
+        .when()
+                .get("/bookings/" + sagaId)
+        .then()
+                .statusCode(200)
+                .extract().response();
     }
 
     // ------------------------------------------------------------------
@@ -93,33 +130,7 @@ class TripBookingSagaE2ETest {
                 .statusCode(201)
                 .extract().jsonPath().getString("sagaId");
 
-        // Poll until saga completes (or times out)
-        await().atMost(60, TimeUnit.SECONDS)
-                .pollInterval(2, TimeUnit.SECONDS)
-                .untilAsserted(() -> {
-                    Response poll = given()
-                            .baseUri(SagaEnvironment.bookingBaseUrl())
-                    .when()
-                            .get("/bookings/" + sagaId)
-                    .then()
-                            .statusCode(200)
-                            .extract().response();
-
-                    String status = poll.jsonPath().getString("status");
-                    assertThat(status)
-                            .as("Saga %s should reach a terminal state", sagaId)
-                            .isIn("COMPLETED", "CANCELLED", "COMPENSATION_FAILED");
-                });
-
-        // Final verification
-        Response finalState = given()
-                .baseUri(SagaEnvironment.bookingBaseUrl())
-        .when()
-                .get("/bookings/" + sagaId)
-        .then()
-                .statusCode(200)
-                .extract().response();
-
+        Response finalState = awaitTerminalState(sagaId, 60);
         assertThat(finalState.jsonPath().getString("status")).isEqualTo("COMPLETED");
 
         List<Map<String, String>> steps = finalState.jsonPath().getList("steps");
@@ -128,6 +139,134 @@ class TripBookingSagaE2ETest {
                 .containsExactly("FLIGHT", "HOTEL", "PAYMENT");
         assertThat(steps).allSatisfy(step ->
                 assertThat(step.get("status")).isEqualTo("RESERVED"));
+    }
+
+    // ------------------------------------------------------------------
+    // Compensation path - flight failure (step 1 fails, no compensation needed)
+    // ------------------------------------------------------------------
+
+    @Test
+    @Order(10)
+    @DisplayName("BLOCKED customer triggers flight rejection - saga CANCELLED, no compensation steps")
+    void flightRejectionCancelsSagaWithoutCompensation() {
+        String sagaId = given()
+                .baseUri(SagaEnvironment.bookingBaseUrl())
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "customerName": "BLOCKED Passenger",
+                          "destination": "Paris",
+                          "amount": 100.00
+                        }
+                        """)
+        .when()
+                .post("/bookings")
+        .then()
+                .statusCode(201)
+                .extract().jsonPath().getString("sagaId");
+
+        Response finalState = awaitTerminalState(sagaId, 90);
+        assertThat(finalState.jsonPath().getString("status")).isEqualTo("CANCELLED");
+
+        List<Map<String, String>> steps = finalState.jsonPath().getList("steps");
+        assertThat(steps).hasSize(3);
+
+        // Flight failed - no reservation was made, so nothing to compensate
+        assertThat(steps.get(0).get("name")).isEqualTo("FLIGHT");
+        assertThat(steps.get(0).get("status")).isEqualTo("FAILED");
+
+        // Hotel and Payment were never attempted
+        assertThat(steps.get(1).get("name")).isEqualTo("HOTEL");
+        assertThat(steps.get(1).get("status")).isEqualTo("PENDING");
+
+        assertThat(steps.get(2).get("name")).isEqualTo("PAYMENT");
+        assertThat(steps.get(2).get("status")).isEqualTo("PENDING");
+    }
+
+    // ------------------------------------------------------------------
+    // Compensation path - hotel failure (step 2 fails, flight compensated)
+    // ------------------------------------------------------------------
+
+    @Test
+    @Order(11)
+    @DisplayName("Mars destination triggers hotel rejection - saga CANCELLED, flight compensated")
+    void hotelRejectionCompensatesFlight() {
+        String sagaId = given()
+                .baseUri(SagaEnvironment.bookingBaseUrl())
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "customerName": "E2E Compensation Test",
+                          "destination": "Mars",
+                          "amount": 500.00
+                        }
+                        """)
+        .when()
+                .post("/bookings")
+        .then()
+                .statusCode(201)
+                .extract().jsonPath().getString("sagaId");
+
+        Response finalState = awaitTerminalState(sagaId, 90);
+        assertThat(finalState.jsonPath().getString("status")).isEqualTo("CANCELLED");
+
+        List<Map<String, String>> steps = finalState.jsonPath().getList("steps");
+        assertThat(steps).hasSize(3);
+
+        // Flight was reserved, then compensated
+        assertThat(steps.get(0).get("name")).isEqualTo("FLIGHT");
+        assertThat(steps.get(0).get("status")).isEqualTo("COMPENSATED");
+
+        // Hotel failed
+        assertThat(steps.get(1).get("name")).isEqualTo("HOTEL");
+        assertThat(steps.get(1).get("status")).isEqualTo("FAILED");
+
+        // Payment was never attempted
+        assertThat(steps.get(2).get("name")).isEqualTo("PAYMENT");
+        assertThat(steps.get(2).get("status")).isEqualTo("PENDING");
+    }
+
+    // ------------------------------------------------------------------
+    // Compensation path - payment failure (step 3 fails, hotel + flight compensated)
+    // ------------------------------------------------------------------
+
+    @Test
+    @Order(12)
+    @DisplayName("Amount >= 1M triggers payment rejection - saga CANCELLED, hotel and flight compensated")
+    void paymentRejectionCompensatesHotelAndFlight() {
+        String sagaId = given()
+                .baseUri(SagaEnvironment.bookingBaseUrl())
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "customerName": "E2E Full Compensation",
+                          "destination": "Tokyo",
+                          "amount": 1000000.00
+                        }
+                        """)
+        .when()
+                .post("/bookings")
+        .then()
+                .statusCode(201)
+                .extract().jsonPath().getString("sagaId");
+
+        Response finalState = awaitTerminalState(sagaId, 90);
+        assertThat(finalState.jsonPath().getString("status")).isEqualTo("CANCELLED");
+
+        List<Map<String, String>> steps = finalState.jsonPath().getList("steps");
+        assertThat(steps).hasSize(3);
+
+        // Flight was reserved, then compensated
+        assertThat(steps.get(0).get("name")).isEqualTo("FLIGHT");
+        assertThat(steps.get(0).get("status")).isEqualTo("COMPENSATED");
+
+        // Hotel was reserved, then compensated
+        assertThat(steps.get(1).get("name")).isEqualTo("HOTEL");
+        assertThat(steps.get(1).get("status")).isEqualTo("COMPENSATED");
+
+        // Payment failed
+        assertThat(steps.get(2).get("name")).isEqualTo("PAYMENT");
+        assertThat(steps.get(2).get("status")).isEqualTo("FAILED");
     }
 
     // ------------------------------------------------------------------
