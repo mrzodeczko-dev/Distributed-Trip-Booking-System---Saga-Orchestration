@@ -1,5 +1,7 @@
 package com.rzodeczko.application.service;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SeatReservationDto;
 import com.rzodeczko.application.port.out.SeatReservationRepository;
 import com.rzodeczko.domain.model.SeatReservation;
@@ -37,30 +39,38 @@ class SeatReservationQueryServiceImplTest {
     }
 
     @Nested
-    @DisplayName("listAll")
-    class ListAll {
+    @DisplayName("list")
+    class ListPaged {
+
+        private final PageQuery pageQuery = new PageQuery(0, 20);
 
         @Test
-        void shouldReturnAllReservationsMappedToDto() {
+        void shouldReturnPagedReservationsMappedToDto() {
             SeatReservation reservation = SeatReservation.reserve(SAGA_ID, CUSTOMER, DESTINATION);
-            when(seatReservationRepository.findAll()).thenReturn(List.of(reservation));
+            PageResult<SeatReservation> pageResult = new PageResult<>(List.of(reservation), 0, 20, 1);
+            when(seatReservationRepository.findAll(pageQuery)).thenReturn(pageResult);
 
-            List<SeatReservationDto> result = service.listAll();
+            PageResult<SeatReservationDto> result = service.list(pageQuery);
 
-            assertThat(result).hasSize(1);
-            SeatReservationDto dto = result.get(0);
+            assertThat(result.content()).hasSize(1);
+            assertThat(result.page()).isEqualTo(0);
+            assertThat(result.size()).isEqualTo(20);
+            assertThat(result.totalElements()).isEqualTo(1);
+            SeatReservationDto dto = result.content().get(0);
             assertThat(dto.sagaId()).isEqualTo(SAGA_ID.toString());
             assertThat(dto.customerName()).isEqualTo(CUSTOMER);
             assertThat(dto.destination()).isEqualTo(DESTINATION);
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoReservations() {
-            when(seatReservationRepository.findAll()).thenReturn(List.of());
+        void shouldReturnEmptyPageWhenNoReservations() {
+            PageResult<SeatReservation> pageResult = new PageResult<>(List.of(), 0, 20, 0);
+            when(seatReservationRepository.findAll(pageQuery)).thenReturn(pageResult);
 
-            List<SeatReservationDto> result = service.listAll();
+            PageResult<SeatReservationDto> result = service.list(pageQuery);
 
-            assertThat(result).isEmpty();
+            assertThat(result.content()).isEmpty();
+            assertThat(result.totalElements()).isEqualTo(0);
         }
     }
 
