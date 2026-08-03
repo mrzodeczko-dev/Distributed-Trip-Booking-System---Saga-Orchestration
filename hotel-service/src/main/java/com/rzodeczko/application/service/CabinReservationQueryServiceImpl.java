@@ -1,10 +1,12 @@
 package com.rzodeczko.application.service;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.CabinReservationDto;
 import com.rzodeczko.application.port.in.GetCabinReservationUseCase;
 import com.rzodeczko.application.port.out.CabinReservationRepository;
+import com.rzodeczko.domain.model.CabinReservation;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,12 +19,14 @@ public class CabinReservationQueryServiceImpl implements GetCabinReservationUseC
     }
 
     @Override
-    public List<CabinReservationDto> listAll() {
-        return cabinReservationRepository
-                .findAll()
-                .stream()
-                .map(CabinReservationDto::from)
-                .toList();
+    public PageResult<CabinReservationDto> list(PageQuery query) {
+        PageResult<CabinReservation> page = cabinReservationRepository.findAll(query);
+        return new PageResult<>(
+                page.content().stream().map(CabinReservationDto::from).toList(),
+                page.page(),
+                page.size(),
+                page.totalElements()
+        );
     }
 
     @Override

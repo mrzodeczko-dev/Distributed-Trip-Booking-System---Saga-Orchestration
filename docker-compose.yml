@@ -50,9 +50,9 @@ services:
       - ./rabbitmq/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
-    depends_on:
-      rabbitmq1:
-        condition: service_healthy
+    # UWAGA: swiadomie BRAK depends_on na rabbitmq1.
+    # Peer discovery (classic_config) na rabbitmq1 probuje rozwiazac rabbit@rabbitmq2 i rabbit@rabbitmq3,
+    # a healthcheck (check_port_connectivity) przechodzi dopiero po zakonczeniu bootu.
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 15s
@@ -78,9 +78,13 @@ services:
       - ./rabbitmq/rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
-    depends_on:
-      rabbitmq1:
-        condition: service_healthy
+    # UWAGA: swiadomie BRAK depends_on na rabbitmq1.
+    # Peer discovery (classic_config) na rabbitmq1 probuje rozwiazac rabbit@rabbitmq2 i rabbit@rabbitmq3,
+    # a healthcheck (check_port_connectivity) przechodzi dopiero po zakonczeniu bootu.
+    # Z `depends_on: rabbitmq1: service_healthy` powstawal zakleszczenie:
+    #   rabbitmq1 czeka na peerow -> nie jest healthy -> compose nie startuje rabbitmq2/3 -> peerow nigdy nie ma.
+    # RabbitMQ 4.x uzywa rozproszonej blokady przy formowaniu klastra, wiec rownoczesny start
+    # wszystkich trzech wezlow jest bezpieczny i jest zalecanym podejsciem.
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 15s

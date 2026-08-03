@@ -1,15 +1,15 @@
 package com.rzodeczko.presentation.controller;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
+import com.rzodeczko.application.dto.PaymentDto;
 import com.rzodeczko.application.port.in.GetPaymentUseCase;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import com.rzodeczko.presentation.dto.response.PaymentResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,10 +26,16 @@ public class PaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PaymentResponseDto>> listAll() {
-        return ResponseEntity.ok(getPaymentUseCase.listAll().stream()
-                .map(PaymentResponseDto::from)
-                .toList());
+    public ResponseEntity<PagedResponseDto<PaymentResponseDto>> getPayments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageResult<PaymentDto> result = getPaymentUseCase.list(new PageQuery(page, size));
+        return ResponseEntity.ok(new PagedResponseDto<>(
+                result.content().stream().map(PaymentResponseDto::from).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements()
+        ));
     }
 
     @GetMapping("/{sagaId}")
@@ -40,4 +46,3 @@ public class PaymentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 }
-

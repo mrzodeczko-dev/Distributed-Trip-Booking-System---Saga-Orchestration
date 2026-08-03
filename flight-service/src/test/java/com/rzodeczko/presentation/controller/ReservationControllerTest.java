@@ -1,7 +1,10 @@
 package com.rzodeczko.presentation.controller;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SeatReservationDto;
 import com.rzodeczko.application.port.in.GetSeatReservationUseCase;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import com.rzodeczko.presentation.dto.response.SeatReservationResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,31 +40,39 @@ class ReservationControllerTest {
     }
 
     @Nested
-    @DisplayName("listAll")
-    class ListAll {
+    @DisplayName("getReservations")
+    class GetReservations {
 
         @Test
-        void shouldReturnOkWithMappedReservations() {
+        void shouldReturnOkWithPagedReservations() {
             SeatReservationDto dto = new SeatReservationDto(
                     UUID.randomUUID().toString(), SAGA_ID.toString(), "Jan", "Mars", "RESERVED", Instant.now()
             );
-            when(getSeatReservationUseCase.listAll()).thenReturn(List.of(dto));
+            PageQuery pageQuery = new PageQuery(0, 20);
+            PageResult<SeatReservationDto> pageResult = new PageResult<>(List.of(dto), 0, 20, 1);
+            when(getSeatReservationUseCase.list(pageQuery)).thenReturn(pageResult);
 
-            ResponseEntity<List<SeatReservationResponseDto>> response = controller.listAll();
+            ResponseEntity<PagedResponseDto<SeatReservationResponseDto>> response = controller.getReservations(0, 20);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).hasSize(1);
-            assertThat(response.getBody().get(0).sagaId()).isEqualTo(SAGA_ID.toString());
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().content()).hasSize(1);
+            assertThat(response.getBody().content().get(0).sagaId()).isEqualTo(SAGA_ID.toString());
+            assertThat(response.getBody().totalElements()).isEqualTo(1);
         }
 
         @Test
-        void shouldReturnOkWithEmptyListWhenNoReservations() {
-            when(getSeatReservationUseCase.listAll()).thenReturn(List.of());
+        void shouldReturnOkWithEmptyPageWhenNoReservations() {
+            PageQuery pageQuery = new PageQuery(0, 20);
+            PageResult<SeatReservationDto> pageResult = new PageResult<>(List.of(), 0, 20, 0);
+            when(getSeatReservationUseCase.list(pageQuery)).thenReturn(pageResult);
 
-            ResponseEntity<List<SeatReservationResponseDto>> response = controller.listAll();
+            ResponseEntity<PagedResponseDto<SeatReservationResponseDto>> response = controller.getReservations(0, 20);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isEmpty();
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().content()).isEmpty();
+            assertThat(response.getBody().totalElements()).isEqualTo(0);
         }
     }
 

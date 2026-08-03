@@ -1,5 +1,7 @@
 package com.rzodeczko.infrastructure.tx;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SeatReservationDto;
 import com.rzodeczko.application.service.SeatReservationQueryServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -31,21 +33,29 @@ class TransactionalSeatReservationQueryServiceTest {
     }
 
     @Test
-    void listAllShouldDelegateAndReturnResult() {
+    void listShouldDelegateAndReturnResult() {
+        PageQuery pageQuery = new PageQuery(0, 20);
         SeatReservationDto dto = sampleDto("Jan");
-        when(delegate.listAll()).thenReturn(List.of(dto));
+        PageResult<SeatReservationDto> pageResult = new PageResult<>(List.of(dto), 0, 20, 1);
+        when(delegate.list(pageQuery)).thenReturn(pageResult);
 
-        List<SeatReservationDto> result = service.listAll();
+        PageResult<SeatReservationDto> result = service.list(pageQuery);
 
-        assertThat(result).containsExactly(dto);
-        verify(delegate).listAll();
+        assertThat(result.content()).containsExactly(dto);
+        assertThat(result.totalElements()).isEqualTo(1);
+        verify(delegate).list(pageQuery);
     }
 
     @Test
-    void listAllShouldReturnEmptyWhenDelegateReturnsEmpty() {
-        when(delegate.listAll()).thenReturn(List.of());
+    void listShouldReturnEmptyPageWhenDelegateReturnsEmpty() {
+        PageQuery pageQuery = new PageQuery(0, 20);
+        PageResult<SeatReservationDto> pageResult = new PageResult<>(List.of(), 0, 20, 0);
+        when(delegate.list(pageQuery)).thenReturn(pageResult);
 
-        assertThat(service.listAll()).isEmpty();
+        PageResult<SeatReservationDto> result = service.list(pageQuery);
+
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isEqualTo(0);
     }
 
     @Test

@@ -1,15 +1,15 @@
 package com.rzodeczko.presentation.controller;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
+import com.rzodeczko.application.dto.SeatReservationDto;
 import com.rzodeczko.application.port.in.GetSeatReservationUseCase;
+import com.rzodeczko.presentation.dto.response.PagedResponseDto;
 import com.rzodeczko.presentation.dto.response.SeatReservationResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,13 +24,16 @@ public class ReservationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SeatReservationResponseDto>> listAll() {
-        return ResponseEntity
-                .ok(getSeatReservationUseCase
-                        .listAll()
-                        .stream()
-                        .map(SeatReservationResponseDto::from)
-                        .toList());
+    public ResponseEntity<PagedResponseDto<SeatReservationResponseDto>> getReservations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageResult<SeatReservationDto> result = getSeatReservationUseCase.list(new PageQuery(page, size));
+        return ResponseEntity.ok(new PagedResponseDto<>(
+                result.content().stream().map(SeatReservationResponseDto::from).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements()
+        ));
     }
 
     @GetMapping("/{sagaId}")

@@ -43,7 +43,6 @@ public class SagaInstanceEntity {
 
     @OneToMany(mappedBy = "saga", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    @BatchSize(size = 2)
     private List<SagaStepEntity> steps = new ArrayList<>();
 
     @Column(nullable = false)

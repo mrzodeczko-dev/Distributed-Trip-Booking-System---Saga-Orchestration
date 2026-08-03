@@ -1,11 +1,12 @@
 package com.rzodeczko.infrastructure.tx;
 
+import com.rzodeczko.application.dto.PageQuery;
+import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SeatReservationDto;
 import com.rzodeczko.application.port.in.GetSeatReservationUseCase;
 import com.rzodeczko.application.service.SeatReservationQueryServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,8 +20,8 @@ public class TransactionalSeatReservationQueryService implements GetSeatReservat
 
     @Override
     @Transactional(readOnly = true)
-    public List<SeatReservationDto> listAll() {
-        return delegate.listAll();
+    public PageResult<SeatReservationDto> list(PageQuery query) {
+        return delegate.list(query);
     }
 
     @Override
