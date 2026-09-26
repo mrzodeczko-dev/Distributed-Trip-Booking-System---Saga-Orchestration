@@ -71,6 +71,10 @@ flowchart TD
 
 ![Saga compensation when payment fails](docs/images/saga-compensation-payment-fails.gif)
 
+**Duplicate reply - pessimistic lock** - the hotel relay crashes before commit and publishes the same reply twice. Two booking-service instances consume it in parallel, but `SELECT ... FOR UPDATE` (`PESSIMISTIC_WRITE`) serializes them: instance A advances the saga, instance B then sees the fresh state, hits the idempotency guard and just acks - no double step, no duplicate command.
+
+![Duplicate reply handled with a pessimistic lock](docs/images/saga-duplicate-reply-pessimistic-lock.gif)
+
 ### Messaging Topology
 
 The system uses three RabbitMQ exchanges: `x.saga.commands` (direct) routes commands by service-specific routing keys (`flight.command`, `hotel.command`, `payment.command`), `x.saga.replies` (direct) routes all participant replies back to the orchestrator via `saga.reply`, and `x.saga.dlx` (direct) handles dead-lettered messages. Each participant has its own command queue and DLQ. All queues are quorum queues by default (replicated across the 3-node cluster).
