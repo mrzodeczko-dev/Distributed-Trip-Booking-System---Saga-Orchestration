@@ -44,4 +44,8 @@ public class SagaStep {
     public boolean isPending() {
         return status == SagaStepStatus.PENDING;
     }
+
+    public boolean isCompensated() {
+        return status == SagaStepStatus.COMPENSATED;
+    }
 }

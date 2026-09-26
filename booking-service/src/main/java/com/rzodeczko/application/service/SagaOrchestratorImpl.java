@@ -11,8 +11,6 @@ import com.rzodeczko.application.port.out.SagaInstanceRepository;
 import com.rzodeczko.domain.exception.SagaNotFoundException;
 import com.rzodeczko.domain.model.saga.SagaInstance;
 import com.rzodeczko.domain.model.saga.SagaStepName;
-import com.rzodeczko.domain.model.saga.SagaStepStatus;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +98,7 @@ public class SagaOrchestratorImpl implements StartTripBookingUseCase, HandleSaga
 
         switch (reply.status()) {
             case SUCCESS -> {
-                if (saga.getStep(reply.step()).getStatus() == SagaStepStatus.COMPENSATED) {
+                if (saga.getStep(reply.step()).isCompensated()) {
                     return;
                 }
                 saga.markCompensated(reply.step());
