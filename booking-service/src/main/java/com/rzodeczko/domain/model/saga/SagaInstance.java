@@ -97,6 +97,20 @@ public class SagaInstance {
         return Optional.empty();
     }
 
+    /**
+     * The step whose participant reply the saga is waiting for: the next step to reserve in the forward phase,
+     * the next step to compensate during compensation. Empty in terminal states.
+     */
+    public Optional<SagaStepName> awaitedStep() {
+        if (isForwardPhase()) {
+            return nextStepToReserve();
+        }
+        if (isCompensating()) {
+            return nextStepToCompensate();
+        }
+        return Optional.empty();
+    }
+
     public SagaStep getStep(SagaStepName name) {
         return steps
                 .stream()

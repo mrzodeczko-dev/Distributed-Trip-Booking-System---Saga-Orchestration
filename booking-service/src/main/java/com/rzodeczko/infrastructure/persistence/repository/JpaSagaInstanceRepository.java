@@ -1,5 +1,6 @@
 package com.rzodeczko.infrastructure.persistence.repository;
 
+import com.rzodeczko.domain.model.saga.SagaStatus;
 import com.rzodeczko.infrastructure.persistence.entity.SagaInstanceEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +35,16 @@ public interface JpaSagaInstanceRepository extends JpaRepository<SagaInstanceEnt
 
     @Query("select s.id from SagaInstanceEntity s order by s.createdAt, s.id")
     Page<UUID> findIds(Pageable pageable);
+
+    @Query("""
+            select s.id from SagaInstanceEntity s
+            where s.status in (:statuses) and s.updatedAt < :updatedBefore
+            order by s.updatedAt, s.id
+            """)
+    List<UUID> findStuckIds(
+            @Param("statuses") Collection<SagaStatus> statuses,
+            @Param("updatedBefore") Instant updatedBefore,
+            Pageable pageable);
 
     default Page<SagaInstanceEntity> findAllWithSteps(Pageable pageable) {
         Page<UUID> idsPage = findIds(pageable);

@@ -45,3 +45,26 @@ databaseChangeLog:
               - column:
                   name: version
                   type: BIGINT
+        # Indexes are declared with every column the query sorts by (including id), so they work the same way
+        # on any database. InnoDB would append the primary key to a secondary index on its own; PostgreSQL would not.
+        # GET /bookings: ORDER BY created_at, id (keyset-friendly, index-only scan of ids)
+        - createIndex:
+            tableName: saga_instances
+            indexName: idx_saga_instances_created_at_id
+            columns:
+              - column:
+                  name: created_at
+              - column:
+                  name: id
+        # GET /bookings/stuck: WHERE status IN (...) AND updated_at < ? ORDER BY updated_at, id
+        # status first: only the few active sagas are scanned, not the ever-growing terminal ones
+        - createIndex:
+            tableName: saga_instances
+            indexName: idx_saga_instances_status_updated_at_id
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: updated_at
+              - column:
+                  name: id

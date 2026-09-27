@@ -42,7 +42,16 @@
       "value": "saga-rabbitmq-cluster-dev"
     }
   ],
-  "policies": [],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "dlq-no-delivery-limit",
+      "pattern": "\\.dlq$",
+      "apply-to": "quorum_queues",
+      "priority": 0,
+      "definition": { "delivery-limit": -1 }
+    }
+  ],
   "queues": [],
   "exchanges": [],
   "bindings": []

@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,10 +34,16 @@ class OutboxEventPublisherTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
+    @Mock
+    private ConnectionFactory connectionFactory;
+
     private OutboxEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
+        // Publisher confirms disabled (mock returns false) -> fire-and-forget path; confirms are covered by
+        // OutboxEventPublisherConfirmsTest. lenient: not every test reaches the send step.
+        lenient().when(rabbitTemplate.getConnectionFactory()).thenReturn(connectionFactory);
         publisher = new OutboxEventPublisher(repository, rabbitTemplate, new ObjectMapper(), 5);
     }
 

@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.time.Duration;
+
 /**
  * Autokonfiguracja mechanizmu Outbox:
  * - encja OutboxEventEntity i repozytorium OutboxEventRepository są znajdowane
@@ -23,6 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Opcjonalne (mają wartości domyślne):
  *   app.rabbitmq.outbox.poll-interval-ms (1000)
  *   app.rabbitmq.outbox.max-attempts (5)
+ *   app.rabbitmq.outbox.confirm-timeout-ms (10000) - how long the relay waits for a publisher confirm
  *   app.rabbitmq.outbox.enabled (true)
  */
 @AutoConfiguration
@@ -47,8 +50,10 @@ public class OutboxAutoConfiguration {
             OutboxEventRepository repository,
             RabbitTemplate rabbitTemplate,
             ObjectMapper objectMapper,
-            @Value("${app.rabbitmq.outbox.max-attempts:5}") int maxAttempts
+            @Value("${app.rabbitmq.outbox.max-attempts:5}") int maxAttempts,
+            @Value("${app.rabbitmq.outbox.confirm-timeout-ms:10000}") long confirmTimeoutMs
     ) {
-        return new OutboxEventPublisher(repository, rabbitTemplate, objectMapper, maxAttempts);
+        return new OutboxEventPublisher(repository, rabbitTemplate, objectMapper, maxAttempts,
+                Duration.ofMillis(confirmTimeoutMs));
     }
 }

@@ -9,7 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,5 +124,57 @@ class SagaInstanceRepositoryAdapterIntegrationTest extends IntegrationTestBase {
         SagaInstance cancelled = repository.findById(saga.getId()).orElseThrow();
         assertThat(cancelled.getStatus()).isEqualTo(SagaStatus.CANCELLED);
         assertThat(cancelled.getStep(SagaStepName.FLIGHT).getStatus()).isEqualTo(SagaStepStatus.COMPENSATED);
+    }
+
+    @Test
+    void shouldFindOnlyActiveSagasIdleLongerThanCutoffOldestFirst() {
+        Instant now = Instant.now();
+        SagaInstance oldest = sagaWithStatus(SagaStatus.IN_PROGRESS, now.minus(Duration.ofHours(3)));
+        SagaInstance olderCompensating = sagaWithStatus(SagaStatus.COMPENSATING, now.minus(Duration.ofHours(2)));
+        SagaInstance oldButCompleted = sagaWithStatus(SagaStatus.COMPLETED, now.minus(Duration.ofHours(3)));
+        SagaInstance freshInProgress = sagaWithStatus(SagaStatus.IN_PROGRESS, now);
+        List.of(oldest, olderCompensating, oldButCompleted, freshInProgress).forEach(repository::save);
+
+        List<UUID> stuckIds = repository.findStuck(
+                        EnumSet.of(SagaStatus.IN_PROGRESS, SagaStatus.COMPENSATING),
+                        now.minus(Duration.ofMinutes(30)),
+                        200)
+                .stream()
+                .map(SagaInstance::getId)
+                .toList();
+
+        assertThat(stuckIds)
+                .contains(oldest.getId(), olderCompensating.getId())
+                .doesNotContain(oldButCompleted.getId(), freshInProgress.getId());
+        assertThat(stuckIds.indexOf(oldest.getId())).isLessThan(stuckIds.indexOf(olderCompensating.getId()));
+    }
+
+    @Test
+    void shouldReturnStuckSagaWithSteps() {
+        Instant old = Instant.now().minus(Duration.ofHours(1));
+        SagaInstance saga = sagaWithStatus(SagaStatus.IN_PROGRESS, old);
+        repository.save(saga);
+
+        SagaInstance found = repository.findStuck(EnumSet.of(SagaStatus.IN_PROGRESS), Instant.now(), 200)
+                .stream()
+                .filter(s -> s.getId().equals(saga.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(found.getSteps()).hasSize(3);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNothingMatches() {
+        assertThat(repository.findStuck(EnumSet.of(SagaStatus.IN_PROGRESS), Instant.EPOCH, 10)).isEmpty();
+    }
+
+    private static SagaInstance sagaWithStatus(SagaStatus status, Instant updatedAt) {
+        List<SagaStep> steps = List.of(
+                new SagaStep(SagaStepName.FLIGHT),
+                new SagaStep(SagaStepName.HOTEL),
+                new SagaStep(SagaStepName.PAYMENT));
+        return SagaInstance.restore(UUID.randomUUID(), "Stuck Test", "Rome", new BigDecimal("100.00"),
+                status, new java.util.ArrayList<>(steps), updatedAt, updatedAt);
     }
 }

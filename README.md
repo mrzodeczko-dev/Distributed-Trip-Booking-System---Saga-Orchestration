@@ -182,7 +182,7 @@ saga-orchestration/
 ├── rabbitmq/                          # Custom RabbitMQ cluster image
 │   ├── Dockerfile                     # Parameterized RABBITMQ_VERSION
 │   ├── rabbitmq.conf                  # Quorum queues, cluster formation, Prometheus
-│   ├── rabbitmq-definitions.json      # Users, vhosts, permissions
+│   ├── rabbitmq-definitions.json      # Users, vhosts, permissions, DLQ policy (no delivery limit)
 │   └── enabled_plugins
 ├── .github/workflows/
 │   ├── ci.yml                         # Unit & contract tests (4 services)

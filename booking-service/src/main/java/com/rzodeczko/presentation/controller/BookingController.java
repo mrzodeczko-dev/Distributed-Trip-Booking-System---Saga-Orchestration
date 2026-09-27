@@ -4,11 +4,14 @@ import com.rzodeczko.application.command.StartTripBookingCommand;
 import com.rzodeczko.application.dto.PageQuery;
 import com.rzodeczko.application.dto.PageResult;
 import com.rzodeczko.application.dto.SagaInstanceDto;
+import com.rzodeczko.application.dto.StuckSagaDto;
+import com.rzodeczko.application.dto.StuckSagaQuery;
 import com.rzodeczko.application.port.in.GetSagaUseCase;
 import com.rzodeczko.application.port.in.StartTripBookingUseCase;
 import com.rzodeczko.presentation.dto.request.StartTripBookingRequestDto;
 import com.rzodeczko.presentation.dto.response.BookingResponseDto;
 import com.rzodeczko.presentation.dto.response.PagedResponseDto;
+import com.rzodeczko.presentation.dto.response.StuckBookingResponseDto;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -17,6 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -55,6 +60,21 @@ public class BookingController {
         } finally {
             MDC.remove("sagaId");
         }
+    }
+
+    /**
+     * Operational view: active sagas (IN_PROGRESS / COMPENSATING) without any change for at least
+     * {@code idleMinutes}, each with the reply it waits for ({@code waitingFor}, e.g. "RESERVE HOTEL").
+     * This is a symptom check based on saga state only; where the message got stuck (outbox, DLQ, ...) has to be
+     * checked in RabbitMQ and in the participant's outbox.
+     */
+    @GetMapping("/stuck")
+    public ResponseEntity<List<StuckBookingResponseDto>> getStuckBookings(
+            @RequestParam(defaultValue = "10") long idleMinutes,
+            @RequestParam(defaultValue = "50") int limit) {
+        List<StuckSagaDto> stuck = getSagaUseCase.findStuck(
+                new StuckSagaQuery(Duration.ofMinutes(idleMinutes), limit));
+        return ResponseEntity.ok(stuck.stream().map(StuckBookingResponseDto::from).toList());
     }
 
     @GetMapping("/{sagaId}")

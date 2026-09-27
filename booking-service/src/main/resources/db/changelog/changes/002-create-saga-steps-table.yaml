@@ -31,6 +31,14 @@ databaseChangeLog:
               - column:
                   name: reason
                   type: TEXT
+        # Explicit index for the foreign key: InnoDB creates one implicitly, PostgreSQL does not.
+        # Used when loading a saga with its steps (join / fetch by saga_id).
+        - createIndex:
+            tableName: saga_steps
+            indexName: idx_saga_steps_saga_id
+            columns:
+              - column:
+                  name: saga_id
         - addForeignKeyConstraint:
             baseTableName: saga_steps
             baseColumnNames: saga_id
